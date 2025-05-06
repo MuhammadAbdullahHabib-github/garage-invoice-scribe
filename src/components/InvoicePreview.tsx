@@ -51,15 +51,6 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
             <h3 className="text-xs text-gray-500 mb-1">Subject</h3>
             <p>{invoice.vehicleType || "Not specified"}</p>
           </div>
-          <div>
-            <h3 className="text-xs text-gray-500 mb-1">Currency</h3>
-            <div className="flex items-center">
-              <div className="w-5 h-3 mr-2 overflow-hidden">
-                <span className="flex items-center justify-center text-xs">🇺🇸</span>
-              </div>
-              <p>USD - United State Dollar</p>
-            </div>
-          </div>
         </div>
       </div>
       
@@ -67,6 +58,7 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
       <table className="w-full mb-8">
         <thead>
           <tr className="border-b text-xs text-gray-500">
+            <th className="pb-2 text-left w-12">S.No</th>
             <th className="pb-2 text-left">ITEM</th>
             <th className="pb-2 text-center">QTY</th>
             <th className="pb-2 text-right">UNIT PRICE</th>
@@ -75,12 +67,13 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
         </thead>
         <tbody>
           {invoice.lineItems.length > 0 ? (
-            invoice.lineItems.map((item) => (
+            invoice.lineItems.map((item, index) => (
               <tr key={item.id} className="border-b">
+                <td className="py-4 text-left">{index + 1}</td>
                 <td className="py-4">
                   <div className="flex items-center">
                     <div className="w-8 h-8 bg-gray-100 rounded mr-2 flex items-center justify-center">
-                      {item.particulars.substring(0, 1).toUpperCase()}
+                      {item.particulars.substring(0, 1).toUpperCase() || "I"}
                     </div>
                     <span>{item.particulars}</span>
                   </div>
@@ -92,7 +85,7 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
             ))
           ) : (
             <tr>
-              <td colSpan={4} className="py-4 text-center text-gray-500">
+              <td colSpan={5} className="py-4 text-center text-gray-500">
                 No items added yet
               </td>
             </tr>
@@ -126,12 +119,6 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
         </div>
       </div>
       
-      {/* Notes */}
-      <div className="mb-8">
-        <p className="text-xs text-gray-500 mb-1">*Notes :</p>
-        <p className="text-sm">Products that you have purchased cannot be returned.</p>
-      </div>
-      
       {/* Attachment */}
       <div>
         <h3 className="text-sm font-medium mb-2">Attachment</h3>
@@ -149,20 +136,6 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
             <Download className="h-4 w-4 mr-1" /> Download
           </button>
         </div>
-      </div>
-      
-      {/* Zoom Controls */}
-      <div className="absolute bottom-6 right-6 flex flex-col bg-black bg-opacity-70 rounded-lg overflow-hidden">
-        <button className="text-white p-2 hover:bg-black">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-        </button>
-        <button className="text-white p-2 hover:bg-black">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 12H6" />
-          </svg>
-        </button>
       </div>
     </div>
   );

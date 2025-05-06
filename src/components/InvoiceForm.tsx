@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, Plus, Trash2 } from "lucide-react";
+import { Calendar as CalendarIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -62,18 +62,6 @@ export function InvoiceForm({ value, onChange }: InvoiceFormProps) {
     setInvoiceData({ ...invoiceData, [field]: value });
   };
 
-  // Add a new empty line item
-  const addNewLine = () => {
-    const newItem: LineItem = {
-      id: `item-${Date.now()}`,
-      particulars: '',
-      rate: 0,
-      amount: 0
-    };
-    
-    handleLineItemsChange([...invoiceData.lineItems, newItem]);
-  };
-
   return (
     <div className="space-y-6">
       <div className="space-y-4">
@@ -129,119 +117,11 @@ export function InvoiceForm({ value, onChange }: InvoiceFormProps) {
             </Popover>
           </div>
         </div>
-        
-        <div>
-          <Label htmlFor="currency">Currency</Label>
-          <div className="relative">
-            <Button variant="outline" className="w-full justify-between mt-2">
-              <div className="flex items-center">
-                <div className="w-6 h-4 mr-2 overflow-hidden">
-                  <span className="flex items-center justify-center text-xs">🇺🇸</span>
-                </div>
-                USD - United State Dollar
-              </div>
-              <span>▼</span>
-            </Button>
-          </div>
-        </div>
       </div>
       
       <div>
         <h3 className="font-medium mb-4">Product</h3>
-        
-        <div className="grid grid-cols-12 gap-4 mb-2 text-sm font-medium">
-          <div className="col-span-5">Item</div>
-          <div className="col-span-2 text-center">Qty*</div>
-          <div className="col-span-3 text-center">Tax</div>
-          <div className="col-span-2"></div>
-        </div>
-        
-        {invoiceData.lineItems.map((item, index) => (
-          <div key={item.id} className="grid grid-cols-12 gap-4 mb-4 items-center">
-            <div className="col-span-5 flex items-center">
-              <div className="w-10 h-10 bg-gray-100 rounded-md mr-3 flex items-center justify-center">
-                <Trash2 className="h-4 w-4 text-gray-400" />
-              </div>
-              <div>
-                <Input 
-                  value={item.particulars} 
-                  placeholder="Item name" 
-                  onChange={(e) => {
-                    const newItems = [...invoiceData.lineItems];
-                    newItems[index].particulars = e.target.value;
-                    handleLineItemsChange(newItems);
-                  }}
-                  className="mb-1"
-                />
-                <Input 
-                  value={item.rate || ''} 
-                  type="number" 
-                  placeholder="Price" 
-                  onChange={(e) => {
-                    const rate = parseFloat(e.target.value) || 0;
-                    const newItems = [...invoiceData.lineItems];
-                    newItems[index].rate = rate;
-                    newItems[index].amount = rate;
-                    handleLineItemsChange(newItems);
-                  }}
-                />
-              </div>
-            </div>
-            
-            <div className="col-span-2">
-              <Input 
-                type="number" 
-                value="1"
-                className="text-center" 
-                onChange={() => {}}
-              />
-            </div>
-            
-            <div className="col-span-3">
-              <Button variant="outline" className="w-full justify-between">
-                10% <span>▼</span>
-              </Button>
-            </div>
-            
-            <div className="col-span-2 flex justify-end items-center">
-              <Button variant="ghost" size="icon" className="text-red-500">
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        ))}
-        
-        <Button 
-          variant="outline" 
-          className="w-full border-dashed mt-2 text-green-600"
-          onClick={addNewLine}
-        >
-          <Plus className="mr-2 h-4 w-4" /> Add New Line
-        </Button>
-      </div>
-      
-      <div className="grid grid-cols-2 gap-6">
-        <div>
-          <h3 className="font-medium mb-2">Add Coupon</h3>
-          <Button variant="outline" className="w-full justify-between">
-            Select... <span>▼</span>
-          </Button>
-        </div>
-        
-        <div>
-          <h3 className="font-medium mb-2">Add Discount</h3>
-          <Button variant="outline" className="w-full justify-between">
-            Winter Sale 20% <span>▼</span>
-          </Button>
-        </div>
-      </div>
-      
-      <div>
-        <h3 className="font-medium mb-2">Notes</h3>
-        <textarea 
-          placeholder="Add Notes"
-          className="w-full border rounded-md p-3 min-h-[100px] resize-none"
-        ></textarea>
+        <LineItemsTable items={invoiceData.lineItems} onChange={handleLineItemsChange} />
       </div>
     </div>
   );

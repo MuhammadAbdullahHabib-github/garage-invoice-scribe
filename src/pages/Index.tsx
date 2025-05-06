@@ -1,17 +1,22 @@
 
 import { useState } from 'react';
 import { toast } from "sonner";
-import { FileDown, Printer, Save, Mail } from "lucide-react";
+import { FileDown, Printer, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InvoiceForm } from "@/components/InvoiceForm";
 import { InvoicePreview } from "@/components/InvoicePreview";
-import { InvoiceData, EMPTY_INVOICE, saveInvoiceAsDraft } from "@/lib/invoice-types";
+import { 
+  InvoiceData, 
+  EMPTY_INVOICE, 
+  saveInvoiceAsDraft, 
+  generateBillNumber 
+} from "@/lib/invoice-types";
 import { generatePDF } from "@/lib/pdf-generator";
 
 const Index = () => {
   const [invoice, setInvoice] = useState<InvoiceData>({
     ...EMPTY_INVOICE,
-    billNo: 'CLG-' + Date.now().toString().slice(-6),
+    billNo: generateBillNumber(),
     date: new Date(),
   });
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
@@ -37,13 +42,9 @@ const Index = () => {
     }
   };
 
-  const handleSaveAsDraft = () => {
+  const handleSaveInvoice = () => {
     saveInvoiceAsDraft(invoice);
-    toast.success("Invoice saved as draft");
-  };
-
-  const handleSendInvoice = () => {
-    toast.success("Invoice sent successfully!");
+    toast.success("Invoice saved successfully!");
   };
 
   return (
@@ -69,10 +70,6 @@ const Index = () => {
               <FileDown className="mr-1 h-4 w-4" />
               <span className="hidden sm:inline">PDF</span>
             </Button>
-            <Button variant="outline" size="sm">
-              <Mail className="mr-1 h-4 w-4" />
-              <span className="hidden sm:inline">Email</span>
-            </Button>
           </div>
         </div>
         <div className="p-6 overflow-auto h-[calc(100vh-9rem)]">
@@ -84,18 +81,22 @@ const Index = () => {
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t flex justify-end gap-4 z-10">
         <Button
           variant="outline"
-          onClick={handleSaveAsDraft}
+          onClick={() => {
+            saveInvoiceAsDraft(invoice);
+            toast.success("Invoice saved as draft");
+          }}
           disabled={isGenerating}
         >
           <Save className="mr-2 h-4 w-4" />
           Save as Draft
         </Button>
         <Button
-          onClick={handleSendInvoice}
+          onClick={handleSaveInvoice}
           className="bg-green-500 hover:bg-green-600 text-white"
           disabled={isGenerating}
         >
-          Send Invoice
+          <Save className="mr-2 h-4 w-4" />
+          Save
         </Button>
       </div>
     </div>
