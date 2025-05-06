@@ -1,5 +1,5 @@
 
-import { Wrench, Gear } from "lucide-react";
+import { Settings, Wrench } from "lucide-react";
 
 interface GarageLogoProps {
   size?: "sm" | "md" | "lg";
@@ -15,7 +15,7 @@ const GarageLogo = ({ size = "md", className = "" }: GarageLogoProps) => {
 
   return (
     <div className={`relative ${sizes[size]} ${className}`}>
-      <Gear className="text-garage-primary absolute top-0 left-0" size={size === "sm" ? 20 : size === "md" ? 32 : 52} />
+      <Settings className="text-garage-primary absolute top-0 left-0" size={size === "sm" ? 20 : size === "md" ? 32 : 52} />
       <Wrench 
         className="text-garage-secondary absolute bottom-0 right-0" 
         size={size === "sm" ? 18 : size === "md" ? 28 : 46} 

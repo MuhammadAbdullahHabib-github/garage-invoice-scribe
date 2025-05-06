@@ -1,7 +1,6 @@
-
 import { useState } from 'react';
 import { toast } from "sonner";
-import { FilePdf, Printer } from "lucide-react";
+import { FileDown, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InvoiceForm } from "@/components/InvoiceForm";
@@ -66,7 +65,7 @@ const Index = () => {
                 onClick={handleExportPDF}
                 disabled={isGenerating}
               >
-                <FilePdf className="mr-2 h-4 w-4" />
+                <FileDown className="mr-2 h-4 w-4" />
                 Export PDF
               </Button>
             </div>
