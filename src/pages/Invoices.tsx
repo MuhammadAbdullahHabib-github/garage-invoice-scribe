@@ -1,248 +1,177 @@
 
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow 
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Edit, FileText, Search, Trash2, X } from "lucide-react";
-import { formatCurrency, InvoiceData, EMPTY_INVOICE } from "@/lib/invoice-types";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { toast } from "sonner";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { Eye, Search, Trash2, Edit } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { InvoiceData, getDraftInvoices, deleteDraftInvoice } from "@/lib/invoice-types";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
-// Sample invoices for demonstration
-const sampleInvoices: InvoiceData[] = [
-  {
-    ...EMPTY_INVOICE,
-    billNo: "CLG-123456",
-    date: new Date(2023, 5, 15),
-    customer: {
-      id: "1",
-      name: "Ahmed Khan",
-      contact: "0303 1234567",
-    },
-    vehicleNo: "ABC-123",
-    vehicleType: "Sedan",
-    meterReading: "45,000 km",
-    lineItems: [
-      { id: "1", particulars: "Oil Change", rate: 1500, amount: 1500 },
-      { id: "2", particulars: "Filter Replacement", rate: 800, amount: 800 },
-    ],
-    total: 2300,
-  },
-  {
-    ...EMPTY_INVOICE,
-    billNo: "CLG-789012",
-    date: new Date(2023, 6, 20),
-    customer: {
-      id: "2",
-      name: "Sara Malik",
-      contact: "0300 7654321", 
-    },
-    vehicleNo: "XYZ-789",
-    vehicleType: "SUV",
-    meterReading: "32,000 km",
-    lineItems: [
-      { id: "1", particulars: "Brake Servicing", rate: 3500, amount: 3500 },
-      { id: "2", particulars: "Wheel Alignment", rate: 1200, amount: 1200 },
-    ],
-    total: 4700,
-  },
-];
-
-export default function Invoices() {
+const Invoices = () => {
   const navigate = useNavigate();
-  const [invoices, setInvoices] = useState<InvoiceData[]>(sampleInvoices);
-  const [invoiceToDelete, setInvoiceToDelete] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [invoices, setInvoices] = useState<InvoiceData[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleDeleteInvoice = () => {
-    if (invoiceToDelete) {
-      const updatedInvoices = invoices.filter(invoice => invoice.billNo !== invoiceToDelete);
-      setInvoices(updatedInvoices);
+  // Load invoices from localStorage
+  useEffect(() => {
+    const loadInvoices = () => {
+      try {
+        const draftInvoices = getDraftInvoices();
+        const invoicesList = Object.values(draftInvoices);
+        setInvoices(invoicesList);
+      } catch (error) {
+        console.error("Error loading invoices:", error);
+        toast.error("Failed to load invoices");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadInvoices();
+  }, []);
+
+  const handleEdit = (id: string) => {
+    navigate(`/invoice/edit/${id}`);
+  };
+
+  const handleDelete = (id: string) => {
+    try {
+      deleteDraftInvoice(id);
+      setInvoices(invoices.filter(invoice => invoice.billNo !== id));
       toast.success("Invoice deleted successfully");
-      setInvoiceToDelete(null);
+    } catch (error) {
+      console.error("Error deleting invoice:", error);
+      toast.error("Failed to delete invoice");
     }
   };
 
-  const handleEditInvoice = (invoiceId: string) => {
-    navigate(`/invoice/edit/${invoiceId}`);
+  const handleView = (id: string) => {
+    navigate(`/invoice/edit/${id}`);
   };
 
-  const filteredInvoices = useMemo(() => {
-    return invoices.filter(invoice => {
-      // Filter by search query
-      const matchesQuery = searchQuery ? 
-        (invoice.customer?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-         invoice.vehicleNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-         invoice.billNo.toLowerCase().includes(searchQuery.toLowerCase())) : true;
-      
-      // Filter by date
-      const matchesDate = dateFilter ? 
-        invoice.date.toDateString() === dateFilter.toDateString() : true;
-      
-      return matchesQuery && matchesDate;
-    });
-  }, [invoices, searchQuery, dateFilter]);
-
-  const clearFilters = () => {
-    setSearchQuery("");
-    setDateFilter(undefined);
-  };
+  const filteredInvoices = invoices.filter(invoice => {
+    const searchLower = searchTerm.toLowerCase();
+    const customerName = invoice.customer?.name?.toLowerCase() || '';
+    const vehicleType = invoice.vehicleType?.toLowerCase() || '';
+    const billNo = invoice.billNo.toLowerCase();
+    
+    return customerName.includes(searchLower) || 
+           vehicleType.includes(searchLower) || 
+           billNo.includes(searchLower);
+  });
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="container py-6 max-w-6xl">
+      <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Invoices</h1>
-        <Button onClick={() => navigate("/")} className="bg-green-500 hover:bg-green-600">
-          <FileText className="mr-2 h-4 w-4" /> Create New Invoice
-        </Button>
-      </div>
-      
-      <div className="flex flex-wrap gap-3 items-center">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <div className="relative w-64">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
             type="search"
-            placeholder="Search by customer, vehicle, or invoice ID"
-            className="pl-8"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search invoices..."
+            className="pl-9"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        
-        <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className={cn(
-                "justify-start text-left font-normal",
-                !dateFilter && "text-muted-foreground"
-              )}
-            >
-              {dateFilter ? format(dateFilter, "PPP") : "Filter by date"}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={dateFilter}
-              onSelect={(date) => {
-                setDateFilter(date);
-                setIsCalendarOpen(false);
-              }}
-              initialFocus
-              className={cn("p-3 pointer-events-auto")}
-            />
-          </PopoverContent>
-        </Popover>
-        
-        {(searchQuery || dateFilter) && (
-          <Button variant="ghost" size="sm" onClick={clearFilters}>
-            <X className="mr-1 h-4 w-4" /> Clear filters
-          </Button>
-        )}
       </div>
-      
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Invoice #</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Customer</TableHead>
-              <TableHead>Vehicle</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
-              <TableHead className="text-center">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredInvoices.map((invoice) => (
-              <TableRow key={invoice.billNo}>
-                <TableCell className="font-medium">{invoice.billNo}</TableCell>
-                <TableCell>
-                  {invoice.date.toLocaleDateString('en-US', { 
-                    day: 'numeric', 
-                    month: 'short',
-                    year: 'numeric'
-                  })}
-                </TableCell>
-                <TableCell>{invoice.customer?.name || "N/A"}</TableCell>
-                <TableCell>{invoice.vehicleNo}</TableCell>
-                <TableCell className="text-right">{formatCurrency(invoice.total)}</TableCell>
-                <TableCell className="text-center">
-                  <div className="flex justify-center space-x-2">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => handleEditInvoice(invoice.billNo)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="text-red-500 hover:text-red-600" 
-                      onClick={() => setInvoiceToDelete(invoice.billNo)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-            {filteredInvoices.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                  {invoices.length === 0 ? (
-                    <>No invoices found. Create your first invoice.</>
-                  ) : (
-                    <>No matching invoices found. Try different search criteria.</>
-                  )}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      
-      <AlertDialog open={!!invoiceToDelete} onOpenChange={(open) => !open && setInvoiceToDelete(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this invoice? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteInvoice} className="bg-red-500 hover:bg-red-600">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+
+      {isLoading ? (
+        <div className="text-center py-8">Loading invoices...</div>
+      ) : invoices.length === 0 ? (
+        <div className="text-center py-8">
+          <p className="text-gray-500 mb-4">No invoices found</p>
+          <Button onClick={() => navigate('/')} className="bg-green-500 hover:bg-green-600">Create New Invoice</Button>
+        </div>
+      ) : (
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Invoice #
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Customer
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Subject
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Date
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Amount
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredInvoices.map((invoice) => (
+                <tr key={invoice.billNo} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {invoice.billNo}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {invoice.customer?.name || 'No customer'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {invoice.vehicleType || 'No subject'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {format(new Date(invoice.date), "dd MMM yyyy")}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    ${invoice.total.toFixed(2)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                      Draft
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <div className="flex justify-end gap-2">
+                      <Button 
+                        onClick={() => handleView(invoice.billNo)}
+                        variant="ghost"
+                        size="sm"
+                        className="text-blue-600 hover:text-blue-900"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        onClick={() => handleEdit(invoice.billNo)}
+                        variant="ghost"
+                        size="sm"
+                        className="text-green-600 hover:text-green-900"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        onClick={() => handleDelete(invoice.billNo)}
+                        variant="ghost"
+                        size="sm" 
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
-}
+};
+
+export default Invoices;

@@ -2,6 +2,7 @@
 import { format } from "date-fns";
 import GarageLogo from "./GarageLogo";
 import { InvoiceData, formatCurrency } from "@/lib/invoice-types";
+import { FileText, Download } from "lucide-react";
 
 interface InvoicePreviewProps {
   invoice: InvoiceData;
@@ -11,124 +12,157 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
   return (
     <div 
       id="invoice-preview" 
-      className="bg-white p-6 shadow-lg min-h-[842px] max-w-[595px] mx-auto"
+      className="bg-white p-6 shadow-lg rounded-lg max-w-[700px] mx-auto"
     >
       {/* Header */}
-      <div className="border-b pb-4 mb-6">
-        <div className="flex justify-between items-start">
-          <div className="flex items-center">
-            <GarageLogo size="lg" className="mr-4" />
-            <div>
-              <h1 className="text-2xl font-bold text-garage-primary">CAR LINE GARAGE</h1>
-              <p className="text-sm text-gray-600">Expert car care for a smooth, safe ride.</p>
-            </div>
+      <div className="flex justify-between items-start mb-8">
+        <div className="flex items-center">
+          <GarageLogo size="md" className="text-green-500" />
+          <div className="ml-2">
+            <h1 className="text-xl font-bold">Monny</h1>
           </div>
-          <div className="text-right">
-            <p className="font-semibold">M. SHAFIQUE 0303 5419671</p>
-            <p className="font-semibold">M. SHAKEEL 0303 7433396</p>
-          </div>
-        </div>
-        <div className="mt-2 text-sm text-center">
-          <p className="text-gray-600">10R1 Samsani Road Shadywall Chowk Johar Town, Lahore.</p>
-        </div>
-      </div>
-
-      {/* Invoice Meta */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div>
-          <p><span className="font-semibold">Bill No:</span> {invoice.billNo}</p>
-          {invoice.customer && (
-            <p><span className="font-semibold">Customer:</span> {invoice.customer.name}</p>
-          )}
-          {invoice.customer && (
-            <p><span className="font-semibold">Contact:</span> {invoice.customer.contact}</p>
-          )}
         </div>
         <div className="text-right">
-          <p><span className="font-semibold">Date:</span> {format(invoice.date, "dd/MM/yyyy")}</p>
-          {invoice.vehicleNo && (
-            <p><span className="font-semibold">Vehicle No:</span> {invoice.vehicleNo}</p>
-          )}
-          {invoice.vehicleType && (
-            <p><span className="font-semibold">Type:</span> {invoice.vehicleType}</p>
-          )}
-          {invoice.meterReading && (
-            <p><span className="font-semibold">Meter Reading:</span> {invoice.meterReading}</p>
-          )}
+          <p className="text-sm text-gray-500">INV {invoice.billNo}</p>
+        </div>
+      </div>
+      
+      {/* Invoice Meta */}
+      <div className="grid grid-cols-2 gap-8 mb-8">
+        <div>
+          <div className="mb-4">
+            <h3 className="text-xs text-gray-500 mb-1">Due Date</h3>
+            <p>{invoice.date ? format(invoice.date, "d MMMM yyyy") : "Not specified"}</p>
+          </div>
+          <div>
+            <h3 className="text-xs text-gray-500 mb-1">Billed To</h3>
+            {invoice.customer ? (
+              <>
+                <p className="font-medium">{invoice.customer.name}</p>
+                <p className="text-sm text-gray-600">{invoice.customer.contact}</p>
+              </>
+            ) : (
+              <p className="text-gray-500">No customer selected</p>
+            )}
+          </div>
+        </div>
+        <div>
+          <div className="mb-4">
+            <h3 className="text-xs text-gray-500 mb-1">Subject</h3>
+            <p>{invoice.vehicleType || "Not specified"}</p>
+          </div>
+          <div>
+            <h3 className="text-xs text-gray-500 mb-1">Currency</h3>
+            <div className="flex items-center">
+              <div className="w-5 h-3 mr-2 overflow-hidden">
+                <span className="flex items-center justify-center text-xs">🇺🇸</span>
+              </div>
+              <p>USD - United State Dollar</p>
+            </div>
+          </div>
         </div>
       </div>
       
       {/* Line Items Table */}
-      <div className="relative mb-6">
-        {/* Watermark */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none">
-          <GarageLogo size="lg" className="w-48 h-48" />
-        </div>
-        
-        {/* Table */}
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="border-b-2 border-garage-primary">
-              <th className="py-2 px-4 text-left w-16">S.No</th>
-              <th className="py-2 px-4 text-left">PARTICULARS</th>
-              <th className="py-2 px-4 text-right w-24">Rate</th>
-              <th className="py-2 px-4 text-right w-32">Amount (Rs & P.)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {invoice.lineItems.length > 0 ? (
-              invoice.lineItems.map((item, index) => (
-                <tr key={item.id} className="border-b border-dotted">
-                  <td className="py-2 px-4">{index + 1}</td>
-                  <td className="py-2 px-4">{item.particulars || "-"}</td>
-                  <td className="py-2 px-4 text-right">
-                    {item.rate ? formatCurrency(item.rate) : "-"}
-                  </td>
-                  <td className="py-2 px-4 text-right">
-                    {item.amount ? formatCurrency(item.amount) : "-"}
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={4} className="py-4 text-center text-gray-500">
-                  No items added yet
+      <table className="w-full mb-8">
+        <thead>
+          <tr className="border-b text-xs text-gray-500">
+            <th className="pb-2 text-left">ITEM</th>
+            <th className="pb-2 text-center">QTY</th>
+            <th className="pb-2 text-right">UNIT PRICE</th>
+            <th className="pb-2 text-right">AMOUNT</th>
+          </tr>
+        </thead>
+        <tbody>
+          {invoice.lineItems.length > 0 ? (
+            invoice.lineItems.map((item) => (
+              <tr key={item.id} className="border-b">
+                <td className="py-4">
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-gray-100 rounded mr-2 flex items-center justify-center">
+                      {item.particulars.substring(0, 1).toUpperCase()}
+                    </div>
+                    <span>{item.particulars}</span>
+                  </div>
                 </td>
+                <td className="py-4 text-center">1</td>
+                <td className="py-4 text-right">${formatCurrency(item.rate)}</td>
+                <td className="py-4 text-right">${formatCurrency(item.amount)}</td>
               </tr>
-            )}
-            
-            {/* Empty rows to fill space */}
-            {invoice.lineItems.length < 10 && Array(10 - invoice.lineItems.length).fill(0).map((_, index) => (
-              <tr key={`empty-${index}`} className="border-b border-dotted">
-                <td className="py-2 px-4">&nbsp;</td>
-                <td className="py-2 px-4"></td>
-                <td className="py-2 px-4"></td>
-                <td className="py-2 px-4"></td>
-              </tr>
-            ))}
-            
-            {/* Total */}
-            <tr className="font-bold">
-              <td colSpan={2} className="py-2 px-4 text-right">
-                Total:
-              </td>
-              <td colSpan={2} className="py-2 px-4 text-right">
-                Rs. {formatCurrency(invoice.total)}
+            ))
+          ) : (
+            <tr>
+              <td colSpan={4} className="py-4 text-center text-gray-500">
+                No items added yet
               </td>
             </tr>
-          </tbody>
-        </table>
-      </div>
+          )}
+        </tbody>
+      </table>
       
-      {/* Footer */}
-      <div className="mt-12">
-        <div className="flex justify-end">
-          <div className="w-1/3">
-            <div className="border-t border-black pt-2 text-center">
-              <p className="font-semibold">Authorised Signature</p>
-            </div>
+      {/* Summary */}
+      <div className="flex justify-end mb-8">
+        <div className="w-1/2">
+          <div className="flex justify-between py-2">
+            <span className="text-gray-500">Sub total</span>
+            <span>${formatCurrency(invoice.total)}</span>
+          </div>
+          <div className="flex justify-between py-2">
+            <span className="text-gray-500">Discount 20%</span>
+            <span>${formatCurrency(invoice.total * 0.2)}</span>
+          </div>
+          <div className="flex justify-between py-2">
+            <span className="text-gray-500">Tax 10%</span>
+            <span>${formatCurrency(invoice.total * 0.1)}</span>
+          </div>
+          <div className="flex justify-between py-2 font-medium border-t">
+            <span>Total</span>
+            <span>${formatCurrency(invoice.total * 0.9 + invoice.total * 0.1)}</span>
+          </div>
+          <div className="flex justify-between py-2 font-bold text-green-600">
+            <span>Amount due</span>
+            <span>${formatCurrency(invoice.total * 0.9 + invoice.total * 0.1)}</span>
           </div>
         </div>
+      </div>
+      
+      {/* Notes */}
+      <div className="mb-8">
+        <p className="text-xs text-gray-500 mb-1">*Notes :</p>
+        <p className="text-sm">Products that you have purchased cannot be returned.</p>
+      </div>
+      
+      {/* Attachment */}
+      <div>
+        <h3 className="text-sm font-medium mb-2">Attachment</h3>
+        <div className="flex items-center justify-between border rounded-lg p-3">
+          <div className="flex items-center">
+            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mr-3">
+              <FileText className="h-5 w-5 text-gray-500" />
+            </div>
+            <div>
+              <p className="text-sm font-medium">Product list.PDF</p>
+              <p className="text-xs text-gray-500">512kb</p>
+            </div>
+          </div>
+          <button className="text-green-500 flex items-center text-sm">
+            <Download className="h-4 w-4 mr-1" /> Download
+          </button>
+        </div>
+      </div>
+      
+      {/* Zoom Controls */}
+      <div className="absolute bottom-6 right-6 flex flex-col bg-black bg-opacity-70 rounded-lg overflow-hidden">
+        <button className="text-white p-2 hover:bg-black">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+        </button>
+        <button className="text-white p-2 hover:bg-black">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 12H6" />
+          </svg>
+        </button>
       </div>
     </div>
   );
