@@ -11,6 +11,7 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandList,
 } from "@/components/ui/command";
 import {
   Popover,
@@ -56,36 +57,38 @@ export function CustomerSelector({ value, onChange }: CustomerSelectorProps) {
       <PopoverContent className="w-[300px] p-0">
         <Command>
           <CommandInput placeholder="Search customer..." />
-          <CommandEmpty>No customer found.</CommandEmpty>
-          <CommandGroup>
-            {SAMPLE_CUSTOMERS.map((customer) => (
-              <CommandItem
-                key={customer.id}
-                value={customer.name}
-                onSelect={() => {
-                  onChange(customer);
-                  setOpen(false);
-                }}
-              >
-                <div className="flex items-center">
-                  <Avatar className="h-6 w-6 mr-2">
-                    <AvatarImage src={customer.avatar} alt={customer.name} />
-                    <AvatarFallback>{customer.name.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex flex-col items-start">
-                    <span>{customer.name}</span>
-                    <span className="text-xs text-muted-foreground">{customer.contact}</span>
+          <CommandList>
+            <CommandEmpty>No customer found.</CommandEmpty>
+            <CommandGroup>
+              {SAMPLE_CUSTOMERS.map((customer) => (
+                <CommandItem
+                  key={customer.id}
+                  value={customer.name}
+                  onSelect={() => {
+                    onChange(customer);
+                    setOpen(false);
+                  }}
+                >
+                  <div className="flex items-center">
+                    <Avatar className="h-6 w-6 mr-2">
+                      <AvatarImage src={customer.avatar} alt={customer.name} />
+                      <AvatarFallback>{customer.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col items-start">
+                      <span>{customer.name}</span>
+                      <span className="text-xs text-muted-foreground">{customer.contact}</span>
+                    </div>
                   </div>
-                </div>
-                <Check
-                  className={cn(
-                    "ml-auto h-4 w-4",
-                    value?.id === customer.id ? "opacity-100" : "opacity-0"
-                  )}
-                />
-              </CommandItem>
-            ))}
-          </CommandGroup>
+                  <Check
+                    className={cn(
+                      "ml-auto h-4 w-4",
+                      value?.id === customer.id ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
         </Command>
       </PopoverContent>
     </Popover>
