@@ -26,7 +26,7 @@ export function LineItemsTable({ items, onChange }: LineItemsTableProps) {
       if (item.id === id) {
         const updatedItem = { ...item, [field]: value };
         
-        // If rate is updated, recalculate amount
+        // Auto-calculate amount when rate is updated
         if (field === 'rate') {
           updatedItem.amount = Number(value);
         }
@@ -46,7 +46,7 @@ export function LineItemsTable({ items, onChange }: LineItemsTableProps) {
 
   return (
     <div className="space-y-4">
-      <div className="border rounded-md">
+      <div className="border rounded-md overflow-hidden">
         <table className="w-full">
           <thead>
             <tr className="bg-muted border-b">
@@ -66,7 +66,7 @@ export function LineItemsTable({ items, onChange }: LineItemsTableProps) {
                     value={item.particulars}
                     onChange={(e) => updateLineItem(item.id, "particulars", e.target.value)}
                     placeholder="Enter item description"
-                    className="border-none"
+                    className="border-none shadow-none"
                   />
                 </td>
                 <td className="py-2 px-4">
@@ -74,7 +74,7 @@ export function LineItemsTable({ items, onChange }: LineItemsTableProps) {
                     type="number"
                     value={item.rate || ""}
                     onChange={(e) => updateLineItem(item.id, "rate", Number(e.target.value))}
-                    className="border-none text-right"
+                    className="border-none shadow-none text-right"
                   />
                 </td>
                 <td className="py-2 px-4">
@@ -82,7 +82,7 @@ export function LineItemsTable({ items, onChange }: LineItemsTableProps) {
                     type="number"
                     value={item.amount || ""}
                     onChange={(e) => updateLineItem(item.id, "amount", Number(e.target.value))}
-                    className="border-none text-right"
+                    className="border-none shadow-none text-right"
                   />
                 </td>
                 <td className="py-2 px-4">
@@ -90,21 +90,29 @@ export function LineItemsTable({ items, onChange }: LineItemsTableProps) {
                     variant="ghost"
                     size="icon"
                     onClick={() => removeLineItem(item.id)}
+                    className="h-8 w-8"
                   >
                     <Trash className="h-4 w-4" />
                   </Button>
                 </td>
               </tr>
             ))}
+            {items.length === 0 && (
+              <tr>
+                <td colSpan={5} className="py-4 text-center text-muted-foreground">
+                  No items added yet. Click "Add New Line" to add an item.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
       <Button
         variant="outline"
-        className="text-garage-primary border-dashed border-garage-primary"
+        className="text-garage-primary border-dashed border-garage-primary flex items-center"
         onClick={addLineItem}
       >
-        + Add New Line
+        <span className="mr-1 text-lg">+</span> Add New Line
       </Button>
     </div>
   );

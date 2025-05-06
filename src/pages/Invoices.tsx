@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   Table,
@@ -10,7 +10,10 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Edit, FileText, Trash2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Edit, FileText, Search, Trash2, X } from "lucide-react";
 import { formatCurrency, InvoiceData, EMPTY_INVOICE } from "@/lib/invoice-types";
 import {
   AlertDialog,
@@ -23,6 +26,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 // Sample invoices for demonstration
 const sampleInvoices: InvoiceData[] = [
@@ -68,6 +73,9 @@ export default function Invoices() {
   const navigate = useNavigate();
   const [invoices, setInvoices] = useState<InvoiceData[]>(sampleInvoices);
   const [invoiceToDelete, setInvoiceToDelete] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const handleDeleteInvoice = () => {
     if (invoiceToDelete) {
@@ -78,13 +86,83 @@ export default function Invoices() {
     }
   };
 
+  const handleEditInvoice = (invoiceId: string) => {
+    navigate(`/invoice/edit/${invoiceId}`);
+  };
+
+  const filteredInvoices = useMemo(() => {
+    return invoices.filter(invoice => {
+      // Filter by search query
+      const matchesQuery = searchQuery ? 
+        (invoice.customer?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+         invoice.vehicleNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+         invoice.billNo.toLowerCase().includes(searchQuery.toLowerCase())) : true;
+      
+      // Filter by date
+      const matchesDate = dateFilter ? 
+        invoice.date.toDateString() === dateFilter.toDateString() : true;
+      
+      return matchesQuery && matchesDate;
+    });
+  }, [invoices, searchQuery, dateFilter]);
+
+  const clearFilters = () => {
+    setSearchQuery("");
+    setDateFilter(undefined);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Invoices</h1>
-        <Button onClick={() => navigate("/")}>
+        <Button onClick={() => navigate("/")} className="bg-green-500 hover:bg-green-600">
           <FileText className="mr-2 h-4 w-4" /> Create New Invoice
         </Button>
+      </div>
+      
+      <div className="flex flex-wrap gap-3 items-center">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Search by customer, vehicle, or invoice ID"
+            className="pl-8"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        
+        <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                "justify-start text-left font-normal",
+                !dateFilter && "text-muted-foreground"
+              )}
+            >
+              {dateFilter ? format(dateFilter, "PPP") : "Filter by date"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={dateFilter}
+              onSelect={(date) => {
+                setDateFilter(date);
+                setIsCalendarOpen(false);
+              }}
+              initialFocus
+              className={cn("p-3 pointer-events-auto")}
+            />
+          </PopoverContent>
+        </Popover>
+        
+        {(searchQuery || dateFilter) && (
+          <Button variant="ghost" size="sm" onClick={clearFilters}>
+            <X className="mr-1 h-4 w-4" /> Clear filters
+          </Button>
+        )}
       </div>
       
       <div className="rounded-md border">
@@ -100,7 +178,7 @@ export default function Invoices() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {invoices.map((invoice) => (
+            {filteredInvoices.map((invoice) => (
               <TableRow key={invoice.billNo}>
                 <TableCell className="font-medium">{invoice.billNo}</TableCell>
                 <TableCell>
@@ -118,7 +196,7 @@ export default function Invoices() {
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      onClick={() => navigate(`/invoice/${invoice.billNo}`)}
+                      onClick={() => handleEditInvoice(invoice.billNo)}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -134,10 +212,14 @@ export default function Invoices() {
                 </TableCell>
               </TableRow>
             ))}
-            {invoices.length === 0 && (
+            {filteredInvoices.length === 0 && (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                  No invoices found. Create your first invoice.
+                  {invoices.length === 0 ? (
+                    <>No invoices found. Create your first invoice.</>
+                  ) : (
+                    <>No matching invoices found. Try different search criteria.</>
+                  )}
                 </TableCell>
               </TableRow>
             )}

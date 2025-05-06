@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { FileText, LogOut, Plus, Users } from "lucide-react";
 import { 
   Sidebar, 
@@ -18,10 +18,11 @@ import { CustomerDialog } from "@/components/CustomerDialog";
 export function AppSidebar() {
   const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   return (
     <>
-      <Sidebar>
+      <Sidebar collapsible="icon">
         <SidebarHeader>
           <div className="p-2">
             <h2 className="text-lg font-bold">CAR LINE GARAGE</h2>

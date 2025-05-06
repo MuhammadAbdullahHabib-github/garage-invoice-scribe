@@ -9,6 +9,7 @@ import NotFound from "./pages/NotFound";
 import Invoices from "./pages/Invoices";
 import Customers from "./pages/Customers";
 import { Layout } from "./components/Layout";
+import EditInvoice from "./pages/EditInvoice"; // Will create this component
 
 const queryClient = new QueryClient();
 
@@ -21,6 +22,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Layout><Index /></Layout>} />
           <Route path="/invoices" element={<Layout><Invoices /></Layout>} />
+          <Route path="/invoice/edit/:id" element={<Layout><EditInvoice /></Layout>} />
           <Route path="/customers" element={<Layout><Customers /></Layout>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
