@@ -12,7 +12,16 @@ export interface PDFTemplateSettings {
   logoUrl: string;
   headerColor: string;
   textColor: string;
-  templateId: string; // Added template ID
+  templateId: string;
+  // Advanced customization options
+  accentColor: string;
+  fontFamily: string;
+  showLines: boolean;
+  companyInfoPosition: 'left' | 'center' | 'right';
+  showLogo: boolean;
+  showDiscount: boolean;
+  showTax: boolean;
+  dateFormat: string;
 }
 
 // Template definitions
@@ -34,6 +43,14 @@ export const PDF_TEMPLATES: PDFTemplate[] = [
     defaultSettings: {
       headerColor: '#2e7d32',
       textColor: '#000000',
+      accentColor: '#2e7d32',
+      fontFamily: 'Helvetica',
+      showLines: true,
+      companyInfoPosition: 'left',
+      showLogo: true,
+      showDiscount: true,
+      showTax: true,
+      dateFormat: 'MM/dd/yyyy'
     }
   },
   {
@@ -44,6 +61,14 @@ export const PDF_TEMPLATES: PDFTemplate[] = [
     defaultSettings: {
       headerColor: '#1976d2',
       textColor: '#333333',
+      accentColor: '#1976d2',
+      fontFamily: 'Arial',
+      showLines: false,
+      companyInfoPosition: 'right',
+      showLogo: true,
+      showDiscount: true,
+      showTax: true,
+      dateFormat: 'dd MMM yyyy'
     }
   },
   {
@@ -54,6 +79,50 @@ export const PDF_TEMPLATES: PDFTemplate[] = [
     defaultSettings: {
       headerColor: '#512da8',
       textColor: '#212121',
+      accentColor: '#9575cd',
+      fontFamily: 'Times',
+      showLines: true,
+      companyInfoPosition: 'center',
+      showLogo: true,
+      showDiscount: true,
+      showTax: true,
+      dateFormat: 'MMMM dd, yyyy'
+    }
+  },
+  {
+    id: 'creative',
+    name: 'Creative',
+    description: 'A bold, colorful design for creative businesses',
+    thumbnail: '/templates/creative-thumbnail.png',
+    defaultSettings: {
+      headerColor: '#ff4081',
+      textColor: '#424242',
+      accentColor: '#ff4081',
+      fontFamily: 'Tahoma',
+      showLines: false,
+      companyInfoPosition: 'left',
+      showLogo: true,
+      showDiscount: true,
+      showTax: true,
+      dateFormat: 'dd/MM/yyyy'
+    }
+  },
+  {
+    id: 'minimalist',
+    name: 'Minimalist',
+    description: 'A clean, simple design with minimal elements',
+    thumbnail: '/templates/minimalist-thumbnail.png',
+    defaultSettings: {
+      headerColor: '#607d8b',
+      textColor: '#37474f',
+      accentColor: '#607d8b',
+      fontFamily: 'Roboto',
+      showLines: false,
+      companyInfoPosition: 'right',
+      showLogo: false,
+      showDiscount: false,
+      showTax: true,
+      dateFormat: 'yyyy-MM-dd'
     }
   }
 ];
@@ -67,7 +136,15 @@ const DEFAULT_SETTINGS: PDFTemplateSettings = {
   logoUrl: "",
   headerColor: "#2e7d32",
   textColor: "#000000",
-  templateId: "classic"
+  templateId: "classic",
+  accentColor: "#2e7d32",
+  fontFamily: "Helvetica",
+  showLines: true,
+  companyInfoPosition: "left",
+  showLogo: true,
+  showDiscount: true,
+  showTax: true,
+  dateFormat: "MM/dd/yyyy"
 };
 
 // Current template settings
@@ -89,6 +166,15 @@ export const getPDFTemplateSettings = (): PDFTemplateSettings => {
       if (!currentSettings.templateId) {
         currentSettings.templateId = 'classic';
       }
+      // Initialize new fields if they don't exist
+      if (currentSettings.accentColor === undefined) currentSettings.accentColor = DEFAULT_SETTINGS.accentColor;
+      if (currentSettings.fontFamily === undefined) currentSettings.fontFamily = DEFAULT_SETTINGS.fontFamily;
+      if (currentSettings.showLines === undefined) currentSettings.showLines = DEFAULT_SETTINGS.showLines;
+      if (currentSettings.companyInfoPosition === undefined) currentSettings.companyInfoPosition = DEFAULT_SETTINGS.companyInfoPosition;
+      if (currentSettings.showLogo === undefined) currentSettings.showLogo = DEFAULT_SETTINGS.showLogo;
+      if (currentSettings.showDiscount === undefined) currentSettings.showDiscount = DEFAULT_SETTINGS.showDiscount;
+      if (currentSettings.showTax === undefined) currentSettings.showTax = DEFAULT_SETTINGS.showTax;
+      if (currentSettings.dateFormat === undefined) currentSettings.dateFormat = DEFAULT_SETTINGS.dateFormat;
     } catch (error) {
       console.error('Error parsing template settings:', error);
     }
