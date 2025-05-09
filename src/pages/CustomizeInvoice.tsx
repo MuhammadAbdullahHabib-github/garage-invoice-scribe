@@ -2,7 +2,17 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
-import { Save, Upload, FileImage, Check, Layout, Palette, FileText } from "lucide-react";
+import { 
+  Save, 
+  Upload, 
+  FileImage, 
+  Check, 
+  Layout, 
+  Palette, 
+  FileText,
+  File,
+  Edit 
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,7 +29,8 @@ import {
   PDF_TEMPLATES,
   getTemplateById,
   PDFTemplateSettings,
-  PDFTemplate
+  PDFTemplate,
+  CustomField
 } from "@/lib/pdf-generator";
 import { 
   Tabs,
@@ -37,6 +48,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 // Create the default placeholder invoice
 const createPlaceholderInvoice = (): InvoiceData => ({
@@ -64,6 +92,11 @@ export default function CustomizeInvoice() {
     getTemplateById(settings.templateId || 'classic')
   );
   const [activeTab, setActiveTab] = useState("templates");
+  
+  // Custom fields state
+  const [newFieldLabel, setNewFieldLabel] = useState("");
+  const [newFieldValue, setNewFieldValue] = useState("");
+  const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
 
   // Apply template settings when selected template changes
   useEffect(() => {
@@ -80,7 +113,17 @@ export default function CustomizeInvoice() {
         showLogo: selectedTemplate.defaultSettings.showLogo ?? prev.showLogo,
         showDiscount: selectedTemplate.defaultSettings.showDiscount ?? prev.showDiscount,
         showTax: selectedTemplate.defaultSettings.showTax ?? prev.showTax,
-        dateFormat: selectedTemplate.defaultSettings.dateFormat || prev.dateFormat
+        dateFormat: selectedTemplate.defaultSettings.dateFormat || prev.dateFormat,
+        borderStyle: selectedTemplate.defaultSettings.borderStyle || prev.borderStyle,
+        cornerStyle: selectedTemplate.defaultSettings.cornerStyle || prev.cornerStyle,
+        backgroundStyle: selectedTemplate.defaultSettings.backgroundStyle || prev.backgroundStyle,
+        backgroundValue: selectedTemplate.defaultSettings.backgroundValue || prev.backgroundValue,
+        includeWatermark: selectedTemplate.defaultSettings.includeWatermark ?? prev.includeWatermark,
+        watermarkText: selectedTemplate.defaultSettings.watermarkText || prev.businessName,
+        includeSignatureLine: selectedTemplate.defaultSettings.includeSignatureLine ?? prev.includeSignatureLine,
+        includeAmountInWords: selectedTemplate.defaultSettings.includeAmountInWords ?? prev.includeAmountInWords,
+        includeFooterText: selectedTemplate.defaultSettings.includeFooterText ?? prev.includeFooterText,
+        footerText: selectedTemplate.defaultSettings.footerText || prev.footerText
       }));
     }
   }, [selectedTemplate]);
@@ -113,6 +156,60 @@ export default function CustomizeInvoice() {
 
   const handleTemplateSelect = (template: PDFTemplate) => {
     setSelectedTemplate(template);
+  };
+
+  // Add a new custom field
+  const handleAddCustomField = () => {
+    if (!newFieldLabel.trim()) {
+      toast.error("Field label cannot be empty");
+      return;
+    }
+
+    if (editingFieldId) {
+      // Update existing field
+      const updatedFields = settings.customFields.map(field => 
+        field.id === editingFieldId 
+          ? { ...field, label: newFieldLabel, value: newFieldValue } 
+          : field
+      );
+      
+      setSettings({
+        ...settings,
+        customFields: updatedFields
+      });
+      
+      setEditingFieldId(null);
+    } else {
+      // Add new field
+      const newField: CustomField = {
+        id: `field-${Date.now()}`,
+        label: newFieldLabel,
+        value: newFieldValue
+      };
+      
+      setSettings({
+        ...settings,
+        customFields: [...(settings.customFields || []), newField]
+      });
+    }
+    
+    setNewFieldLabel("");
+    setNewFieldValue("");
+  };
+
+  // Edit a custom field
+  const handleEditField = (field: CustomField) => {
+    setNewFieldLabel(field.label);
+    setNewFieldValue(field.value);
+    setEditingFieldId(field.id);
+  };
+
+  // Delete a custom field
+  const handleDeleteField = (fieldId: string) => {
+    setSettings({
+      ...settings,
+      customFields: settings.customFields.filter(field => field.id !== fieldId)
+    });
   };
 
   const handleSaveSettings = async () => {
@@ -165,7 +262,7 @@ export default function CustomizeInvoice() {
           <h2 className="text-lg font-semibold mb-6">Customize PDF Template</h2>
           
           <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-            <TabsList className="grid grid-cols-3 mb-6">
+            <TabsList className="grid grid-cols-4 mb-6">
               <TabsTrigger value="templates" className="flex items-center gap-2">
                 <Layout className="h-4 w-4" />
                 Templates
@@ -178,13 +275,17 @@ export default function CustomizeInvoice() {
                 <Palette className="h-4 w-4" />
                 Appearance
               </TabsTrigger>
+              <TabsTrigger value="layout" className="flex items-center gap-2">
+                <File className="h-4 w-4" />
+                Layout
+              </TabsTrigger>
             </TabsList>
             
             <TabsContent value="templates" className="space-y-6">
               {/* Template Selection */}
               <div className="mb-4">
                 <h3 className="font-medium text-sm mb-3">Choose Template</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4">
                   {PDF_TEMPLATES.map((template) => (
                     <div 
                       key={template.id}
@@ -299,6 +400,84 @@ export default function CustomizeInvoice() {
                   )}
                 </div>
               </div>
+              
+              {/* Custom Fields */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium">Custom Fields</CardTitle>
+                  <CardDescription>
+                    Add any additional information to display in the invoice header
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-4">
+                    {settings.customFields && settings.customFields.map((field) => (
+                      <div key={field.id} className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium">{field.label}</p>
+                          <p className="text-xs text-gray-500">{field.value}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => handleEditField(field)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => handleDeleteField(field.id)}
+                          >
+                            <svg 
+                              xmlns="http://www.w3.org/2000/svg" 
+                              width="24" 
+                              height="24" 
+                              viewBox="0 0 24 24" 
+                              fill="none" 
+                              stroke="currentColor" 
+                              strokeWidth="2" 
+                              strokeLinecap="round" 
+                              strokeLinejoin="round" 
+                              className="h-4 w-4"
+                            >
+                              <path d="M3 6h18"></path>
+                              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                              <line x1="10" y1="11" x2="10" y2="17"></line>
+                              <line x1="14" y1="11" x2="14" y2="17"></line>
+                            </svg>
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="flex gap-3 mt-4">
+                    <div className="flex-1">
+                      <Input
+                        placeholder="Field Label"
+                        value={newFieldLabel}
+                        onChange={(e) => setNewFieldLabel(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <Input
+                        placeholder="Field Value"
+                        value={newFieldValue}
+                        onChange={(e) => setNewFieldValue(e.target.value)}
+                      />
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      onClick={handleAddCustomField}
+                    >
+                      {editingFieldId ? "Update" : "Add"}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
               
               <div>
                 <Label htmlFor="companyInfoPosition">Company Info Position</Label>
@@ -440,6 +619,145 @@ export default function CustomizeInvoice() {
                 </Select>
               </div>
               
+              <div>
+                <Label htmlFor="backgroundStyle">Background Style</Label>
+                <Select 
+                  value={settings.backgroundStyle} 
+                  onValueChange={(value) => handleSelectChange('backgroundStyle', value)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select background style" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="solid">Solid Color</SelectItem>
+                      <SelectItem value="gradient">Gradient</SelectItem>
+                      <SelectItem value="pattern">Pattern</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {settings.backgroundStyle === 'solid' && (
+                <div>
+                  <Label htmlFor="backgroundValue">Background Color</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="backgroundValue"
+                      name="backgroundValue"
+                      type="color"
+                      value={settings.backgroundValue}
+                      onChange={handleSettingChange}
+                      className="w-12 h-10 p-1"
+                    />
+                    <Input
+                      name="backgroundValue"
+                      type="text"
+                      value={settings.backgroundValue}
+                      onChange={handleSettingChange}
+                    />
+                  </div>
+                </div>
+              )}
+              
+              {settings.backgroundStyle === 'gradient' && (
+                <div>
+                  <Label htmlFor="backgroundValue">Gradient Value</Label>
+                  <Input
+                    id="backgroundValue"
+                    name="backgroundValue"
+                    type="text"
+                    value={settings.backgroundValue}
+                    onChange={handleSettingChange}
+                    placeholder="linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)"
+                  />
+                </div>
+              )}
+              
+              {settings.backgroundStyle === 'pattern' && (
+                <div>
+                  <Label htmlFor="backgroundValue">Pattern</Label>
+                  <Select 
+                    value={settings.backgroundValue} 
+                    onValueChange={(value) => handleSelectChange('backgroundValue', value)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select pattern" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectItem value="diagonal-stripes">Diagonal Stripes</SelectItem>
+                        <SelectItem value="dots">Dots</SelectItem>
+                        <SelectItem value="grid">Grid</SelectItem>
+                        <SelectItem value="waves">Waves</SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              
+              <div className="flex items-center justify-between">
+                <Label htmlFor="includeWatermark">Include Watermark</Label>
+                <Switch
+                  id="includeWatermark"
+                  checked={settings.includeWatermark}
+                  onCheckedChange={(checked) => handleSwitchChange('includeWatermark', checked)}
+                />
+              </div>
+              
+              {settings.includeWatermark && (
+                <div>
+                  <Label htmlFor="watermarkText">Watermark Text</Label>
+                  <Input
+                    id="watermarkText"
+                    name="watermarkText"
+                    value={settings.watermarkText}
+                    onChange={handleSettingChange}
+                    placeholder="Company Name"
+                  />
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="layout" className="space-y-6">
+              <div>
+                <Label htmlFor="borderStyle">Border Style</Label>
+                <Select 
+                  value={settings.borderStyle} 
+                  onValueChange={(value) => handleSelectChange('borderStyle', value)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select border style" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="none">No Border</SelectItem>
+                      <SelectItem value="full">Full Border</SelectItem>
+                      <SelectItem value="header-only">Header Border Only</SelectItem>
+                      <SelectItem value="table-only">Table Border Only</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="cornerStyle">Corner Style</Label>
+                <Select 
+                  value={settings.cornerStyle} 
+                  onValueChange={(value) => handleSelectChange('cornerStyle', value)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select corner style" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="square">Square</SelectItem>
+                      <SelectItem value="rounded">Rounded</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+              
               <div className="flex items-center justify-between">
                 <Label htmlFor="showLines">Show Table Lines</Label>
                 <Switch
@@ -466,6 +784,47 @@ export default function CustomizeInvoice() {
                   onCheckedChange={(checked) => handleSwitchChange('showTax', checked)}
                 />
               </div>
+              
+              <div className="flex items-center justify-between">
+                <Label htmlFor="includeSignatureLine">Include Signature Line</Label>
+                <Switch
+                  id="includeSignatureLine"
+                  checked={settings.includeSignatureLine}
+                  onCheckedChange={(checked) => handleSwitchChange('includeSignatureLine', checked)}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <Label htmlFor="includeAmountInWords">Include Amount In Words</Label>
+                <Switch
+                  id="includeAmountInWords"
+                  checked={settings.includeAmountInWords}
+                  onCheckedChange={(checked) => handleSwitchChange('includeAmountInWords', checked)}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <Label htmlFor="includeFooterText">Include Footer Text</Label>
+                <Switch
+                  id="includeFooterText"
+                  checked={settings.includeFooterText}
+                  onCheckedChange={(checked) => handleSwitchChange('includeFooterText', checked)}
+                />
+              </div>
+              
+              {settings.includeFooterText && (
+                <div>
+                  <Label htmlFor="footerText">Footer Text</Label>
+                  <Textarea
+                    id="footerText"
+                    name="footerText"
+                    value={settings.footerText}
+                    onChange={handleSettingChange}
+                    placeholder="Thank you for your business!"
+                    rows={2}
+                  />
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </div>
@@ -520,14 +879,99 @@ function CustomInvoicePreview({ invoice, settings }: { invoice: InvoiceData, set
     fontFamily: settings.fontFamily || 'Helvetica',
   };
 
+  // Calculate final amount based on settings
+  const calculateFinalAmount = () => {
+    let amount = invoice.total;
+    
+    if (settings.showDiscount) {
+      amount = amount * 0.8; // Apply 20% discount
+    }
+    
+    if (settings.showTax) {
+      amount = amount + (invoice.total * 0.1); // Add 10% tax on original amount
+    }
+    
+    return (amount).toFixed(2);
+  };
+
+  // Convert amount to words if needed
+  const getAmountInWords = () => {
+    const amount = parseFloat(calculateFinalAmount());
+    // Simple implementation - would normally use a more robust library
+    return `${amount} USD only`;
+  };
+
+  // Get border style based on settings
+  const getBorderStyle = () => {
+    switch (settings.borderStyle) {
+      case 'full':
+        return 'border border-gray-300';
+      case 'header-only':
+        return 'border-t border-l border-r border-gray-300';
+      case 'table-only':
+        return '';
+      default:
+        return '';
+    }
+  };
+
+  // Get corner style
+  const getCornerStyle = () => {
+    return settings.cornerStyle === 'rounded' ? 'rounded-lg' : '';
+  };
+
+  // Get background style
+  const getBackgroundStyles = () => {
+    switch (settings.backgroundStyle) {
+      case 'gradient':
+        return { background: settings.backgroundValue || 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)' };
+      case 'pattern':
+        return { backgroundImage: `url('/patterns/${settings.backgroundValue}.png')` };
+      default:
+        return { backgroundColor: settings.backgroundValue || '#ffffff' };
+    }
+  };
+
   return (
     <div 
       id="custom-invoice-preview" 
-      className="bg-white p-6 shadow-lg rounded-lg max-w-[700px] mx-auto"
-      style={{ fontFamily: templateStyle.fontFamily }}
+      className={`bg-white p-6 shadow-lg max-w-[700px] mx-auto ${getCornerStyle()} ${getBorderStyle()}`}
+      style={{ 
+        fontFamily: templateStyle.fontFamily,
+        position: 'relative',
+        overflow: 'hidden',
+        ...getBackgroundStyles()
+      }}
     >
-      {/* Custom Header */}
-      <div style={{ backgroundColor: templateStyle.headerBg, padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
+      {/* Watermark */}
+      {settings.includeWatermark && settings.watermarkText && (
+        <div 
+          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+          style={{ zIndex: 1 }}
+        >
+          <div 
+            className="transform rotate-45 text-gray-100"
+            style={{ 
+              fontSize: '8rem', 
+              opacity: 0.1,
+              fontWeight: 'bold',
+              userSelect: 'none'
+            }}
+          >
+            {settings.watermarkText}
+          </div>
+        </div>
+      )}
+
+      {/* Header */}
+      <div style={{ 
+        backgroundColor: templateStyle.headerBg, 
+        padding: '20px', 
+        borderRadius: settings.cornerStyle === 'rounded' ? '8px' : '0',
+        marginBottom: '20px',
+        position: 'relative',
+        zIndex: 2
+      }}>
         <div className={`flex ${
           settings.companyInfoPosition === 'center' 
             ? 'flex-col items-center text-center' 
@@ -541,6 +985,17 @@ function CustomInvoicePreview({ invoice, settings }: { invoice: InvoiceData, set
               <p className="text-sm opacity-90">{settings.businessTagline}</p>
               <p className="text-xs mt-1 opacity-80">{settings.contactInfo}</p>
               <p className="text-xs opacity-80">{settings.address}</p>
+              
+              {/* Custom fields */}
+              {settings.customFields && settings.customFields.length > 0 && (
+                <div className="mt-1">
+                  {settings.customFields.map(field => (
+                    <p key={field.id} className="text-xs opacity-80">
+                      {field.label}: {field.value}
+                    </p>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           
@@ -570,7 +1025,7 @@ function CustomInvoicePreview({ invoice, settings }: { invoice: InvoiceData, set
       </div>
       
       {/* Invoice Meta */}
-      <div className="grid grid-cols-2 gap-8 mb-8">
+      <div className="grid grid-cols-2 gap-8 mb-8" style={{ position: 'relative', zIndex: 2 }}>
         <div>
           <div className="mb-4">
             <h3 className="text-xs text-gray-500 mb-1">Due Date</h3>
@@ -578,40 +1033,55 @@ function CustomInvoicePreview({ invoice, settings }: { invoice: InvoiceData, set
           </div>
           <div>
             <h3 className="text-xs text-gray-500 mb-1">Billed To</h3>
-            {invoice.customer ? (
-              <>
-                <p className="font-medium">{invoice.customer.name}</p>
-                <p className="text-sm text-gray-600">{invoice.customer.contact}</p>
-              </>
-            ) : (
-              <p className="text-gray-500">Customer Name</p>
-            )}
+            <p className="font-medium">Customer Name</p>
+            <p className="text-sm text-gray-600">customer@example.com</p>
           </div>
         </div>
         <div>
           <div className="mb-4">
             <h3 className="text-xs text-gray-500 mb-1">Subject</h3>
-            <p>{invoice.vehicleType || "Vehicle Service"}</p>
+            <p>Vehicle Service</p>
           </div>
         </div>
       </div>
       
       {/* Line Items Table */}
-      <table className={`w-full mb-8 ${settings.showLines ? 'border-collapse' : ''}`}>
+      <table 
+        className={`w-full mb-8 ${
+          settings.showLines ? 'border-collapse' : ''
+        } ${
+          settings.borderStyle === 'table-only' || settings.borderStyle === 'full' 
+          ? 'border border-gray-300' : ''
+        }`}
+        style={{ position: 'relative', zIndex: 2 }}
+      >
         <thead>
-          <tr className={settings.showLines ? 'border-b border-gray-200' : 'border-b'}>
-            <th className="pb-2 text-left w-12">S.No</th>
-            <th className="pb-2 text-left">ITEM</th>
-            <th className="pb-2 text-center">QTY</th>
-            <th className="pb-2 text-right">UNIT PRICE</th>
-            <th className="pb-2 text-right">AMOUNT</th>
+          <tr 
+            className={`
+              ${settings.showLines ? 'border-b border-gray-200' : 'border-b'}
+              ${settings.borderStyle === 'table-only' || settings.borderStyle === 'full' ? 'bg-gray-50' : ''}
+            `}
+            style={{ color: templateStyle.accentColor }}
+          >
+            <th className="pb-2 pt-2 text-left w-12 px-2">S.No</th>
+            <th className="pb-2 pt-2 text-left px-2">ITEM</th>
+            <th className="pb-2 pt-2 text-center px-2">QTY</th>
+            <th className="pb-2 pt-2 text-right px-2">UNIT PRICE</th>
+            <th className="pb-2 pt-2 text-right px-2">AMOUNT</th>
           </tr>
         </thead>
         <tbody>
           {invoice.lineItems.map((item, index) => (
-            <tr key={item.id} className={settings.showLines ? 'border-b border-gray-100' : 'border-b'}>
-              <td className="py-4 text-left">{index + 1}</td>
-              <td className="py-4">
+            <tr 
+              key={item.id} 
+              className={`
+                ${settings.showLines ? 'border-b border-gray-100' : 'border-b'}
+                ${settings.borderStyle === 'table-only' || settings.borderStyle === 'full' 
+                  ? 'border-t border-gray-200' : ''}
+              `}
+            >
+              <td className="py-4 text-left px-2">{index + 1}</td>
+              <td className="py-4 px-2">
                 <div className="flex items-center">
                   <div 
                     className="w-8 h-8 rounded mr-2 flex items-center justify-center" 
@@ -624,16 +1094,16 @@ function CustomInvoicePreview({ invoice, settings }: { invoice: InvoiceData, set
                   <span>{item.particulars}</span>
                 </div>
               </td>
-              <td className="py-4 text-center">1</td>
-              <td className="py-4 text-right">${(item.rate).toFixed(2)}</td>
-              <td className="py-4 text-right">${(item.amount).toFixed(2)}</td>
+              <td className="py-4 text-center px-2">1</td>
+              <td className="py-4 text-right px-2">${(item.rate).toFixed(2)}</td>
+              <td className="py-4 text-right px-2">${(item.amount).toFixed(2)}</td>
             </tr>
           ))}
         </tbody>
       </table>
       
       {/* Summary */}
-      <div className="flex justify-end mb-8">
+      <div className="flex justify-end mb-8" style={{ position: 'relative', zIndex: 2 }}>
         <div className="w-1/2">
           <div className="flex justify-between py-2">
             <span className="text-gray-500">Sub total</span>
@@ -656,23 +1126,46 @@ function CustomInvoicePreview({ invoice, settings }: { invoice: InvoiceData, set
           
           <div className="flex justify-between py-2 font-medium border-t">
             <span>Total</span>
-            <span>${(
-              invoice.total * 
-              (settings.showDiscount ? 0.8 : 1) + 
-              (settings.showTax ? invoice.total * 0.1 : 0)
-            ).toFixed(2)}</span>
+            <span>${calculateFinalAmount()}</span>
           </div>
           
           <div className="flex justify-between py-2 font-bold" style={{ color: templateStyle.accentColor }}>
             <span>Amount due</span>
-            <span>${(
-              invoice.total * 
-              (settings.showDiscount ? 0.8 : 1) + 
-              (settings.showTax ? invoice.total * 0.1 : 0)
-            ).toFixed(2)}</span>
+            <span>${calculateFinalAmount()}</span>
           </div>
         </div>
       </div>
+      
+      {/* Amount in Words */}
+      {settings.includeAmountInWords && (
+        <div className="mb-4 text-gray-600 text-sm italic" style={{ position: 'relative', zIndex: 2 }}>
+          <div className="font-medium">Amount in words:</div>
+          <div>{getAmountInWords()}</div>
+        </div>
+      )}
+      
+      {/* Footer text */}
+      {settings.includeFooterText && settings.footerText && (
+        <div 
+          className="mb-6 text-center text-sm text-gray-500"
+          style={{ position: 'relative', zIndex: 2 }}
+        >
+          {settings.footerText}
+        </div>
+      )}
+      
+      {/* Signature Line */}
+      {settings.includeSignatureLine && (
+        <div 
+          className="flex justify-end mb-4"
+          style={{ position: 'relative', zIndex: 2 }}
+        >
+          <div className="text-center">
+            <div className="w-40 border-t border-gray-400 pt-1"></div>
+            <p className="text-xs text-gray-500">Authorized Signature</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
