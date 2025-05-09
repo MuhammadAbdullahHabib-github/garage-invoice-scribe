@@ -1,49 +1,75 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
-import { Save, Upload, FileImage } from "lucide-react";
+import { Save, Upload, FileImage, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { InvoicePreview } from "@/components/InvoicePreview";
 import { Textarea } from "@/components/ui/textarea";
 import { 
   InvoiceData, 
   EMPTY_INVOICE, 
   generateBillNumber 
 } from "@/lib/invoice-types";
-import { updatePDFTemplateSettings } from "@/lib/pdf-generator";
+import { 
+  updatePDFTemplateSettings, 
+  getPDFTemplateSettings,
+  PDF_TEMPLATES,
+  getTemplateById,
+  PDFTemplateSettings,
+  PDFTemplate
+} from "@/lib/pdf-generator";
+import { 
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel
+} from "@/components/ui/form";
+import { useForm } from 'react-hook-form';
 
-const DEFAULT_SETTINGS = {
-  businessName: "Car Line Garage",
-  businessTagline: "Professional Auto Service",
-  contactInfo: "Phone: 123-456-7890 | Email: info@carlinegarage.com",
-  address: "123 Auto Street, Mechanic City",
-  logoUrl: "",
-  headerColor: "#2e7d32",
-  textColor: "#000000"
-};
+// Create the default placeholder invoice
+const createPlaceholderInvoice = (): InvoiceData => ({
+  ...EMPTY_INVOICE,
+  billNo: generateBillNumber(),
+  date: new Date(),
+  lineItems: [
+    { id: '1', particulars: 'Oil Change', rate: 45.00, amount: 45.00 },
+    { id: '2', particulars: 'Air Filter Replacement', rate: 25.00, amount: 25.00 },
+    { id: '3', particulars: 'Brake Inspection', rate: 60.00, amount: 60.00 },
+  ],
+  total: 130.00,
+});
 
 export default function CustomizeInvoice() {
   const navigate = useNavigate();
-  const [settings, setSettings] = useState(() => {
+  const [settings, setSettings] = useState<PDFTemplateSettings>(() => {
     const savedSettings = localStorage.getItem('pdfTemplateSettings');
-    return savedSettings ? JSON.parse(savedSettings) : DEFAULT_SETTINGS;
+    return savedSettings ? JSON.parse(savedSettings) : getPDFTemplateSettings();
   });
   
-  const [previewInvoice, setPreviewInvoice] = useState<InvoiceData>({
-    ...EMPTY_INVOICE,
-    billNo: generateBillNumber(),
-    date: new Date(),
-    lineItems: [
-      { id: '1', particulars: 'Oil Change', rate: 45.00, amount: 45.00 },
-      { id: '2', particulars: 'Air Filter Replacement', rate: 25.00, amount: 25.00 },
-      { id: '3', particulars: 'Brake Inspection', rate: 60.00, amount: 60.00 },
-    ],
-    total: 130.00,
-  });
-
+  const [previewInvoice] = useState<InvoiceData>(createPlaceholderInvoice());
   const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<PDFTemplate | undefined>(
+    getTemplateById(settings.templateId || 'classic')
+  );
+
+  // Apply template settings when selected template changes
+  useEffect(() => {
+    if (selectedTemplate && selectedTemplate.defaultSettings) {
+      // Only update colors if they haven't been customized
+      const defaultHeaderColor = selectedTemplate.defaultSettings.headerColor;
+      const defaultTextColor = selectedTemplate.defaultSettings.textColor;
+      
+      setSettings(prev => ({
+        ...prev,
+        templateId: selectedTemplate.id,
+        headerColor: defaultHeaderColor || prev.headerColor,
+        textColor: defaultTextColor || prev.textColor
+      }));
+    }
+  }, [selectedTemplate]);
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -63,6 +89,10 @@ export default function CustomizeInvoice() {
     setSettings({ ...settings, [name]: value });
   };
 
+  const handleTemplateSelect = (template: PDFTemplate) => {
+    setSelectedTemplate(template);
+  };
+
   const handleSaveSettings = async () => {
     try {
       // If there's a logo file, we would typically upload it to a server
@@ -71,7 +101,11 @@ export default function CustomizeInvoice() {
         const reader = new FileReader();
         reader.onloadend = () => {
           const base64Logo = reader.result as string;
-          const updatedSettings = { ...settings, logoUrl: base64Logo };
+          const updatedSettings = { 
+            ...settings, 
+            logoUrl: base64Logo,
+            templateId: selectedTemplate?.id || 'classic'
+          };
           
           // Save to localStorage
           localStorage.setItem('pdfTemplateSettings', JSON.stringify(updatedSettings));
@@ -84,10 +118,14 @@ export default function CustomizeInvoice() {
         reader.readAsDataURL(logoFile);
       } else {
         // Save current settings without changing logo
-        localStorage.setItem('pdfTemplateSettings', JSON.stringify(settings));
+        const updatedSettings = {
+          ...settings,
+          templateId: selectedTemplate?.id || 'classic'
+        };
+        localStorage.setItem('pdfTemplateSettings', JSON.stringify(updatedSettings));
         
         // Update PDF generator settings
-        updatePDFTemplateSettings(settings);
+        updatePDFTemplateSettings(updatedSettings);
         
         toast.success("Template settings saved successfully!");
       }
@@ -101,8 +139,54 @@ export default function CustomizeInvoice() {
     <div className="grid grid-cols-1 lg:grid-cols-2 h-full">
       {/* Form Section */}
       <div className="bg-white border-r">
-        <div className="p-6">
+        <div className="p-6 overflow-auto h-[calc(100vh-9rem)]">
           <h2 className="text-lg font-semibold mb-6">Customize PDF Template</h2>
+          
+          {/* Template Selection */}
+          <div className="mb-8">
+            <h3 className="font-medium text-sm mb-3">Choose Template</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {PDF_TEMPLATES.map((template) => (
+                <div 
+                  key={template.id}
+                  onClick={() => handleTemplateSelect(template)}
+                  className={`relative border rounded-lg overflow-hidden cursor-pointer transition-all
+                    ${selectedTemplate?.id === template.id 
+                      ? 'border-green-500 ring-2 ring-green-500/30' 
+                      : 'border-gray-200 hover:border-gray-300'}`}
+                >
+                  {/* Template thumbnail */}
+                  <div className="h-32 bg-gray-100 flex items-center justify-center">
+                    <div 
+                      className="w-full h-24 mx-4" 
+                      style={{ 
+                        backgroundColor: template.defaultSettings.headerColor || '#2e7d32',
+                        borderRadius: '4px'
+                      }}
+                    >
+                      <div className="p-2 text-white text-xs">
+                        <p className="font-bold">INVOICE TEMPLATE</p>
+                        <p className="opacity-80">{template.name}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Template info */}
+                  <div className="p-3">
+                    <p className="font-medium text-sm">{template.name}</p>
+                    <p className="text-xs text-gray-500 mt-1">{template.description}</p>
+                  </div>
+                  
+                  {/* Selection indicator */}
+                  {selectedTemplate?.id === template.id && (
+                    <div className="absolute top-2 right-2 bg-green-500 text-white p-1 rounded-full">
+                      <Check size={12} />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
           
           <div className="space-y-6">
             <div>
@@ -255,13 +339,19 @@ export default function CustomizeInvoice() {
 
 // Custom Invoice Preview Component to show template customizations
 function CustomInvoicePreview({ invoice, settings }: { invoice: InvoiceData, settings: any }) {
+  // Use the selected template's styles
+  const templateStyle = {
+    headerBg: settings.headerColor || '#2e7d32',
+    textColor: settings.textColor || '#000000',
+  };
+
   return (
     <div 
       id="custom-invoice-preview" 
       className="bg-white p-6 shadow-lg rounded-lg max-w-[700px] mx-auto"
     >
       {/* Custom Header */}
-      <div style={{ backgroundColor: settings.headerColor, padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
+      <div style={{ backgroundColor: templateStyle.headerBg, padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
         <div className="flex justify-between items-start">
           <div className="flex items-center">
             {settings.logoUrl ? (
@@ -271,14 +361,14 @@ function CustomInvoicePreview({ invoice, settings }: { invoice: InvoiceData, set
                 <FileImage className="h-8 w-8 text-white" />
               </div>
             )}
-            <div style={{ color: settings.textColor }}>
+            <div style={{ color: templateStyle.textColor }}>
               <h1 className="text-xl font-bold">{settings.businessName}</h1>
               <p className="text-sm opacity-90">{settings.businessTagline}</p>
               <p className="text-xs mt-1 opacity-80">{settings.contactInfo}</p>
               <p className="text-xs opacity-80">{settings.address}</p>
             </div>
           </div>
-          <div className="text-right" style={{ color: settings.textColor }}>
+          <div className="text-right" style={{ color: templateStyle.textColor }}>
             <p className="text-sm font-semibold">INVOICE</p>
             <p className="text-sm">{invoice.billNo}</p>
           </div>

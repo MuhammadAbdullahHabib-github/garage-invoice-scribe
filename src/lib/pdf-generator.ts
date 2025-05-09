@@ -12,7 +12,51 @@ export interface PDFTemplateSettings {
   logoUrl: string;
   headerColor: string;
   textColor: string;
+  templateId: string; // Added template ID
 }
+
+// Template definitions
+export interface PDFTemplate {
+  id: string;
+  name: string;
+  description: string;
+  thumbnail: string;
+  defaultSettings: Partial<PDFTemplateSettings>;
+}
+
+// Available templates
+export const PDF_TEMPLATES: PDFTemplate[] = [
+  {
+    id: 'classic',
+    name: 'Classic',
+    description: 'A professional, clean template with a colored header',
+    thumbnail: '/templates/classic-thumbnail.png',
+    defaultSettings: {
+      headerColor: '#2e7d32',
+      textColor: '#000000',
+    }
+  },
+  {
+    id: 'modern',
+    name: 'Modern',
+    description: 'A sleek, minimal design with accent colors',
+    thumbnail: '/templates/modern-thumbnail.png',
+    defaultSettings: {
+      headerColor: '#1976d2',
+      textColor: '#333333',
+    }
+  },
+  {
+    id: 'elegant',
+    name: 'Elegant',
+    description: 'A sophisticated template with formal styling',
+    thumbnail: '/templates/elegant-thumbnail.png',
+    defaultSettings: {
+      headerColor: '#512da8',
+      textColor: '#212121',
+    }
+  }
+];
 
 // Default template settings
 const DEFAULT_SETTINGS: PDFTemplateSettings = {
@@ -22,7 +66,8 @@ const DEFAULT_SETTINGS: PDFTemplateSettings = {
   address: "123 Auto Street, Mechanic City",
   logoUrl: "",
   headerColor: "#2e7d32",
-  textColor: "#000000"
+  textColor: "#000000",
+  templateId: "classic"
 };
 
 // Current template settings
@@ -40,11 +85,20 @@ export const getPDFTemplateSettings = (): PDFTemplateSettings => {
   if (savedSettings) {
     try {
       currentSettings = JSON.parse(savedSettings);
+      // Ensure templateId exists
+      if (!currentSettings.templateId) {
+        currentSettings.templateId = 'classic';
+      }
     } catch (error) {
       console.error('Error parsing template settings:', error);
     }
   }
   return currentSettings;
+};
+
+// Function to get template by ID
+export const getTemplateById = (id: string): PDFTemplate | undefined => {
+  return PDF_TEMPLATES.find(template => template.id === id);
 };
 
 export const generatePDF = async (
