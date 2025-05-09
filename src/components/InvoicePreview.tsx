@@ -2,30 +2,60 @@
 import { format } from "date-fns";
 import GarageLogo from "./GarageLogo";
 import { InvoiceData, formatCurrency } from "@/lib/invoice-types";
-import { FileText, Download } from "lucide-react";
+import { FileText, Download, FileImage } from "lucide-react";
+import { getPDFTemplateSettings } from "@/lib/pdf-generator";
 
 interface InvoicePreviewProps {
   invoice: InvoiceData;
 }
 
 export function InvoicePreview({ invoice }: InvoicePreviewProps) {
+  const settings = getPDFTemplateSettings();
+  const useCustomHeader = !!settings && localStorage.getItem('pdfTemplateSettings');
+
   return (
     <div 
       id="invoice-preview" 
       className="bg-white p-6 shadow-lg rounded-lg max-w-[700px] mx-auto"
     >
       {/* Header */}
-      <div className="flex justify-between items-start mb-8">
-        <div className="flex items-center">
-          <GarageLogo size="md" className="text-green-500" />
-          <div className="ml-2">
-            <h1 className="text-xl font-bold">Monny</h1>
+      {useCustomHeader ? (
+        <div style={{ backgroundColor: settings.headerColor, padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
+          <div className="flex justify-between items-start">
+            <div className="flex items-center">
+              {settings.logoUrl ? (
+                <img src={settings.logoUrl} alt="Business Logo" className="h-16 w-16 object-contain mr-3" />
+              ) : (
+                <div className="h-16 w-16 bg-white/30 rounded-full flex items-center justify-center mr-3">
+                  <FileImage className="h-8 w-8 text-white" />
+                </div>
+              )}
+              <div style={{ color: settings.textColor }}>
+                <h1 className="text-xl font-bold">{settings.businessName}</h1>
+                <p className="text-sm opacity-90">{settings.businessTagline}</p>
+                <p className="text-xs mt-1 opacity-80">{settings.contactInfo}</p>
+                <p className="text-xs opacity-80">{settings.address}</p>
+              </div>
+            </div>
+            <div className="text-right" style={{ color: settings.textColor }}>
+              <p className="text-sm font-semibold">INVOICE</p>
+              <p className="text-sm">{invoice.billNo}</p>
+            </div>
           </div>
         </div>
-        <div className="text-right">
-          <p className="text-sm text-gray-500">INV {invoice.billNo}</p>
+      ) : (
+        <div className="flex justify-between items-start mb-8">
+          <div className="flex items-center">
+            <GarageLogo size="md" className="text-green-500" />
+            <div className="ml-2">
+              <h1 className="text-xl font-bold">Monny</h1>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-sm text-gray-500">INV {invoice.billNo}</p>
+          </div>
         </div>
-      </div>
+      )}
       
       {/* Invoice Meta */}
       <div className="grid grid-cols-2 gap-8 mb-8">

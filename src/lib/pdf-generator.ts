@@ -3,6 +3,50 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { InvoiceData } from './invoice-types';
 
+// Define the type for template settings
+export interface PDFTemplateSettings {
+  businessName: string;
+  businessTagline: string;
+  contactInfo: string;
+  address: string;
+  logoUrl: string;
+  headerColor: string;
+  textColor: string;
+}
+
+// Default template settings
+const DEFAULT_SETTINGS: PDFTemplateSettings = {
+  businessName: "Car Line Garage",
+  businessTagline: "Professional Auto Service",
+  contactInfo: "Phone: 123-456-7890 | Email: info@carlinegarage.com",
+  address: "123 Auto Street, Mechanic City",
+  logoUrl: "",
+  headerColor: "#2e7d32",
+  textColor: "#000000"
+};
+
+// Current template settings
+let currentSettings: PDFTemplateSettings = { ...DEFAULT_SETTINGS };
+
+// Function to update template settings
+export const updatePDFTemplateSettings = (settings: PDFTemplateSettings): void => {
+  currentSettings = { ...settings };
+  localStorage.setItem('pdfTemplateSettings', JSON.stringify(settings));
+};
+
+// Function to get current template settings
+export const getPDFTemplateSettings = (): PDFTemplateSettings => {
+  const savedSettings = localStorage.getItem('pdfTemplateSettings');
+  if (savedSettings) {
+    try {
+      currentSettings = JSON.parse(savedSettings);
+    } catch (error) {
+      console.error('Error parsing template settings:', error);
+    }
+  }
+  return currentSettings;
+};
+
 export const generatePDF = async (
   invoiceData: InvoiceData,
   elementId: string
@@ -44,7 +88,12 @@ export const generatePDF = async (
     }
 
     pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-    pdf.save(`Car_Line_Garage_Invoice_${invoiceData.billNo}.pdf`);
+    
+    // Get business name from template settings for the filename
+    const settings = getPDFTemplateSettings();
+    const businessName = settings.businessName.replace(/\s+/g, '_') || 'Car_Line_Garage';
+    
+    pdf.save(`${businessName}_Invoice_${invoiceData.billNo}.pdf`);
 
   } catch (error) {
     console.error('Error generating PDF:', error);

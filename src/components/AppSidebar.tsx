@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { FileText, LogOut, Users } from "lucide-react";
+import { FileText, LogOut, Users, FileImage } from "lucide-react";
 import { 
   Sidebar, 
   SidebarContent, 
@@ -56,6 +56,17 @@ export function AppSidebar() {
             >
               <Users className="h-5 w-5" />
               <span>Customers</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          
+          <SidebarMenuItem>
+            <SidebarMenuButton 
+              onClick={() => navigate("/customize-invoice")} 
+              isActive={location.pathname === "/customize-invoice"}
+              tooltip="Customize Invoice"
+            >
+              <FileImage className="h-5 w-5" />
+              <span>Invoice Template</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
