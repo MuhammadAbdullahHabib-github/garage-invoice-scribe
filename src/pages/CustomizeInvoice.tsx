@@ -107,44 +107,53 @@ export default function CustomizeInvoice() {
   const [newFieldLabel, setNewFieldLabel] = useState("");
   const [newFieldValue, setNewFieldValue] = useState("");
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
+  
+  // This effect updates the preview in real-time whenever settings change
+  useEffect(() => {
+    // We don't need to do anything specifically here as the settings state 
+    // is passed directly to the InvoicePreview component
+    // The preview will re-render whenever settings change
+  }, [settings]);
 
   // Apply template settings when selected template changes
   useEffect(() => {
     if (selectedTemplate && selectedTemplate.defaultSettings) {
-      setSettings(prev => ({
-        ...prev,
+      const newSettings = {
+        ...settings,
         templateId: selectedTemplate.id,
-        headerColor: selectedTemplate.defaultSettings.headerColor || prev.headerColor,
-        textColor: selectedTemplate.defaultSettings.textColor || prev.textColor,
-        accentColor: selectedTemplate.defaultSettings.accentColor || prev.accentColor,
-        fontFamily: selectedTemplate.defaultSettings.fontFamily || prev.fontFamily,
-        showLines: selectedTemplate.defaultSettings.showLines ?? prev.showLines,
-        companyInfoPosition: selectedTemplate.defaultSettings.companyInfoPosition || prev.companyInfoPosition,
-        headerStyle: selectedTemplate.defaultSettings.headerStyle || prev.headerStyle,
-        invoiceNumberPosition: selectedTemplate.defaultSettings.invoiceNumberPosition || prev.invoiceNumberPosition,
-        showLogo: selectedTemplate.defaultSettings.showLogo ?? prev.showLogo,
-        logoPosition: selectedTemplate.defaultSettings.logoPosition || prev.logoPosition,
-        showDiscount: selectedTemplate.defaultSettings.showDiscount ?? prev.showDiscount,
-        showTax: selectedTemplate.defaultSettings.showTax ?? prev.showTax,
-        dateFormat: selectedTemplate.defaultSettings.dateFormat || prev.dateFormat,
-        borderStyle: selectedTemplate.defaultSettings.borderStyle || prev.borderStyle,
-        cornerStyle: selectedTemplate.defaultSettings.cornerStyle || prev.cornerStyle,
-        backgroundStyle: selectedTemplate.defaultSettings.backgroundStyle || prev.backgroundStyle,
-        backgroundValue: selectedTemplate.defaultSettings.backgroundValue || prev.backgroundValue,
-        includeWatermark: selectedTemplate.defaultSettings.includeWatermark ?? prev.includeWatermark,
-        watermarkText: selectedTemplate.defaultSettings.watermarkText || prev.businessName,
-        includeSignatureLine: selectedTemplate.defaultSettings.includeSignatureLine ?? prev.includeSignatureLine,
-        includeAmountInWords: selectedTemplate.defaultSettings.includeAmountInWords ?? prev.includeAmountInWords,
-        includeFooterText: selectedTemplate.defaultSettings.includeFooterText || prev.footerText,
-        footerText: selectedTemplate.defaultSettings.footerText || prev.footerText,
-        tableHeaderStyle: selectedTemplate.defaultSettings.tableHeaderStyle || prev.tableHeaderStyle,
-        alternateRowColors: selectedTemplate.defaultSettings.alternateRowColors ?? prev.alternateRowColors,
-        includeTaxFields: selectedTemplate.defaultSettings.includeTaxFields ?? prev.includeTaxFields,
-        includeTermsAndConditions: selectedTemplate.defaultSettings.includeTermsAndConditions ?? prev.includeTermsAndConditions,
-        termsAndConditions: selectedTemplate.defaultSettings.termsAndConditions || prev.termsAndConditions,
-        includeNotes: selectedTemplate.defaultSettings.includeNotes ?? prev.includeNotes,
-        notes: selectedTemplate.defaultSettings.notes || prev.notes
-      }));
+        headerColor: selectedTemplate.defaultSettings.headerColor || settings.headerColor,
+        textColor: selectedTemplate.defaultSettings.textColor || settings.textColor,
+        accentColor: selectedTemplate.defaultSettings.accentColor || settings.accentColor,
+        fontFamily: selectedTemplate.defaultSettings.fontFamily || settings.fontFamily,
+        showLines: selectedTemplate.defaultSettings.showLines ?? settings.showLines,
+        companyInfoPosition: selectedTemplate.defaultSettings.companyInfoPosition || settings.companyInfoPosition,
+        headerStyle: selectedTemplate.defaultSettings.headerStyle || settings.headerStyle,
+        invoiceNumberPosition: selectedTemplate.defaultSettings.invoiceNumberPosition || settings.invoiceNumberPosition,
+        showLogo: selectedTemplate.defaultSettings.showLogo ?? settings.showLogo,
+        logoPosition: selectedTemplate.defaultSettings.logoPosition || settings.logoPosition,
+        showDiscount: selectedTemplate.defaultSettings.showDiscount ?? settings.showDiscount,
+        showTax: selectedTemplate.defaultSettings.showTax ?? settings.showTax,
+        dateFormat: selectedTemplate.defaultSettings.dateFormat || settings.dateFormat,
+        borderStyle: selectedTemplate.defaultSettings.borderStyle || settings.borderStyle,
+        cornerStyle: selectedTemplate.defaultSettings.cornerStyle || settings.cornerStyle,
+        backgroundStyle: selectedTemplate.defaultSettings.backgroundStyle || settings.backgroundStyle,
+        backgroundValue: selectedTemplate.defaultSettings.backgroundValue || settings.backgroundValue,
+        includeWatermark: selectedTemplate.defaultSettings.includeWatermark ?? settings.includeWatermark,
+        watermarkText: selectedTemplate.defaultSettings.watermarkText || settings.businessName,
+        includeSignatureLine: selectedTemplate.defaultSettings.includeSignatureLine ?? settings.includeSignatureLine,
+        includeAmountInWords: selectedTemplate.defaultSettings.includeAmountInWords ?? settings.includeAmountInWords,
+        includeFooterText: selectedTemplate.defaultSettings.includeFooterText ?? settings.includeFooterText,
+        footerText: selectedTemplate.defaultSettings.footerText || settings.footerText,
+        tableHeaderStyle: selectedTemplate.defaultSettings.tableHeaderStyle || settings.tableHeaderStyle,
+        alternateRowColors: selectedTemplate.defaultSettings.alternateRowColors ?? settings.alternateRowColors,
+        includeTaxFields: selectedTemplate.defaultSettings.includeTaxFields ?? settings.includeTaxFields,
+        includeTermsAndConditions: selectedTemplate.defaultSettings.includeTermsAndConditions ?? settings.includeTermsAndConditions,
+        termsAndConditions: selectedTemplate.defaultSettings.termsAndConditions || settings.termsAndConditions,
+        includeNotes: selectedTemplate.defaultSettings.includeNotes ?? settings.includeNotes,
+        notes: selectedTemplate.defaultSettings.notes || settings.notes
+      };
+      
+      setSettings(newSettings);
     }
   }, [selectedTemplate]);
 
@@ -176,6 +185,7 @@ export default function CustomizeInvoice() {
 
   const handleTemplateSelect = (template: PDFTemplate) => {
     setSelectedTemplate(template);
+    // Template selection is handled in useEffect
   };
 
   const handleGradientSelect = (gradientValue: string) => {
@@ -357,6 +367,7 @@ export default function CustomizeInvoice() {
               </div>
             </TabsContent>
             
+            {/* Company tab content */}
             <TabsContent value="company" className="space-y-6">
               <div>
                 <Label htmlFor="businessName">Business Name</Label>
@@ -491,6 +502,7 @@ export default function CustomizeInvoice() {
               </Card>
             </TabsContent>
             
+            {/* Header tab content */}
             <TabsContent value="header" className="space-y-6">
               <div>
                 <Label htmlFor="headerStyle">Header Style</Label>
@@ -628,6 +640,7 @@ export default function CustomizeInvoice() {
               )}
             </TabsContent>
             
+            {/* Design tab content */}
             <TabsContent value="design" className="space-y-6">
               <div>
                 <Label htmlFor="accentColor">Accent Color (for headings, buttons)</Label>
@@ -909,6 +922,7 @@ export default function CustomizeInvoice() {
               )}
             </TabsContent>
             
+            {/* Content tab content */}
             <TabsContent value="content" className="space-y-6">
               <div className="flex items-center justify-between">
                 <Label htmlFor="showDiscount" className="flex items-center gap-2">
