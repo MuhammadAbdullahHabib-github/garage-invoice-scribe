@@ -1,4 +1,3 @@
-
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { InvoiceData } from './invoice-types';
@@ -27,6 +26,13 @@ export interface PDFTemplateSettings {
   dateFormat: string;
   // Custom fields
   customFields: CustomField[];
+  // Pre-table fields options
+  showMeterReading: boolean;
+  showVehicleInfo: boolean;
+  showCustomerInfo: boolean;
+  showDueDate: boolean;
+  showInvoiceDate: boolean;
+  preTableCustomFields: CustomField[];
   // Design options
   borderStyle: 'none' | 'full' | 'header-only' | 'table-only';
   cornerStyle: 'square' | 'rounded';
@@ -549,6 +555,14 @@ const DEFAULT_SETTINGS: PDFTemplateSettings = {
   showTax: true,
   dateFormat: "MM/dd/yyyy",
   customFields: [],
+  // Pre-table fields
+  showMeterReading: true,
+  showVehicleInfo: true,
+  showCustomerInfo: true,
+  showDueDate: true,
+  showInvoiceDate: true,
+  preTableCustomFields: [],
+  // Design options
   borderStyle: "none",
   cornerStyle: "square",
   backgroundStyle: "solid",
@@ -600,6 +614,14 @@ export const getPDFTemplateSettings = (): PDFTemplateSettings => {
       if (currentSettings.showDiscount === undefined) currentSettings.showDiscount = DEFAULT_SETTINGS.showDiscount;
       if (currentSettings.showTax === undefined) currentSettings.showTax = DEFAULT_SETTINGS.showTax;
       if (currentSettings.dateFormat === undefined) currentSettings.dateFormat = DEFAULT_SETTINGS.dateFormat;
+      
+      // Initialize pre-table fields
+      if (currentSettings.showMeterReading === undefined) currentSettings.showMeterReading = DEFAULT_SETTINGS.showMeterReading;
+      if (currentSettings.showVehicleInfo === undefined) currentSettings.showVehicleInfo = DEFAULT_SETTINGS.showVehicleInfo;
+      if (currentSettings.showCustomerInfo === undefined) currentSettings.showCustomerInfo = DEFAULT_SETTINGS.showCustomerInfo;
+      if (currentSettings.showDueDate === undefined) currentSettings.showDueDate = DEFAULT_SETTINGS.showDueDate;
+      if (currentSettings.showInvoiceDate === undefined) currentSettings.showInvoiceDate = DEFAULT_SETTINGS.showInvoiceDate;
+      if (currentSettings.preTableCustomFields === undefined) currentSettings.preTableCustomFields = DEFAULT_SETTINGS.preTableCustomFields;
       
       // Initialize design fields
       if (currentSettings.customFields === undefined) currentSettings.customFields = DEFAULT_SETTINGS.customFields;

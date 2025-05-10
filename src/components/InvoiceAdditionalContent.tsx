@@ -68,3 +68,5 @@ export const InvoiceAdditionalContent: React.FC<InvoiceAdditionalContentProps> =
     </>
   );
 };
+
+export default InvoiceAdditionalContent;

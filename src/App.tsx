@@ -11,6 +11,7 @@ import Customers from "./pages/Customers";
 import { Layout } from "./components/Layout";
 import EditInvoice from "./pages/EditInvoice";
 import CustomizeInvoice from "./pages/CustomizeInvoice";
+import PreviewPDF from "./pages/PreviewPDF";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/invoice/edit/:id" element={<Layout><EditInvoice /></Layout>} />
           <Route path="/customers" element={<Layout><Customers /></Layout>} />
           <Route path="/customize-invoice" element={<Layout><CustomizeInvoice /></Layout>} />
+          <Route path="/preview-pdf/:id" element={<Layout><PreviewPDF /></Layout>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
