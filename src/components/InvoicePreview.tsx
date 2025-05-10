@@ -23,13 +23,22 @@ export function InvoicePreview({ invoice, hideAttachment = false }: InvoicePrevi
     const handleSettingsChange = () => {
       setSettings(getPDFTemplateSettings());
     };
+    
+    const handleTemplateSelected = (e: CustomEvent) => {
+      if (e.detail && e.detail.templateId) {
+        // Force refresh settings when template changes
+        setSettings(getPDFTemplateSettings());
+      }
+    };
 
-    // Create a custom event for settings changes
+    // Create custom events for settings changes
     window.addEventListener('pdfSettingsChanged', handleSettingsChange);
+    window.addEventListener('templateSelected', handleTemplateSelected as EventListener);
     
     // Cleanup
     return () => {
       window.removeEventListener('pdfSettingsChanged', handleSettingsChange);
+      window.removeEventListener('templateSelected', handleTemplateSelected as EventListener);
     };
   }, []);
 

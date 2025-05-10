@@ -110,9 +110,9 @@ export default function CustomizeInvoice() {
   
   // This effect updates the preview in real-time whenever settings change
   useEffect(() => {
-    // We don't need to do anything specifically here as the settings state 
-    // is passed directly to the InvoicePreview component
-    // The preview will re-render whenever settings change
+    // Dispatch custom event to notify components of settings changes
+    const event = new CustomEvent('pdfSettingsChanged');
+    window.dispatchEvent(event);
   }, [settings]);
 
   // Apply template settings when selected template changes
@@ -154,6 +154,10 @@ export default function CustomizeInvoice() {
       };
       
       setSettings(newSettings);
+      
+      // Dispatch event for real-time update
+      const event = new CustomEvent('pdfSettingsChanged');
+      window.dispatchEvent(event);
     }
   }, [selectedTemplate]);
 
@@ -266,6 +270,10 @@ export default function CustomizeInvoice() {
           // Update PDF generator settings
           updatePDFTemplateSettings(updatedSettings);
           
+          // Dispatch event for real-time update
+          const event = new CustomEvent('pdfSettingsChanged');
+          window.dispatchEvent(event);
+          
           toast.success("Template settings saved successfully!");
         };
         reader.readAsDataURL(logoFile);
@@ -279,6 +287,10 @@ export default function CustomizeInvoice() {
         
         // Update PDF generator settings
         updatePDFTemplateSettings(updatedSettings);
+        
+        // Dispatch event for real-time update
+        const event = new CustomEvent('pdfSettingsChanged');
+        window.dispatchEvent(event);
         
         toast.success("Template settings saved successfully!");
       }
