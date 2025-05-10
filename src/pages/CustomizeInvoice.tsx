@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
@@ -16,7 +15,6 @@ import {
   AlignLeft,
   LayoutGrid,
   SquareDashed,
-  ColorPicker,
   Image,
   SquareSplitHorizontal,
   Text
@@ -136,7 +134,7 @@ export default function CustomizeInvoice() {
         watermarkText: selectedTemplate.defaultSettings.watermarkText || prev.businessName,
         includeSignatureLine: selectedTemplate.defaultSettings.includeSignatureLine ?? prev.includeSignatureLine,
         includeAmountInWords: selectedTemplate.defaultSettings.includeAmountInWords ?? prev.includeAmountInWords,
-        includeFooterText: selectedTemplate.defaultSettings.includeFooterText ?? prev.includeFooterText,
+        includeFooterText: selectedTemplate.defaultSettings.includeFooterText || prev.footerText,
         footerText: selectedTemplate.defaultSettings.footerText || prev.footerText,
         tableHeaderStyle: selectedTemplate.defaultSettings.tableHeaderStyle || prev.tableHeaderStyle,
         alternateRowColors: selectedTemplate.defaultSettings.alternateRowColors ?? prev.alternateRowColors,
@@ -759,7 +757,7 @@ export default function CustomizeInvoice() {
               {settings.backgroundStyle === 'solid' && (
                 <div>
                   <Label htmlFor="backgroundValue" className="flex items-center gap-2">
-                    <ColorPicker className="h-4 w-4" />
+                    <Palette className="h-4 w-4" />
                     Background Color
                   </Label>
                   <div className="flex gap-2">
@@ -784,7 +782,7 @@ export default function CustomizeInvoice() {
               {settings.backgroundStyle === 'gradient' && (
                 <div className="space-y-4">
                   <Label htmlFor="gradientPresets" className="flex items-center gap-2">
-                    <ColorPicker className="h-4 w-4" />
+                    <Palette className="h-4 w-4" />
                     Gradient Presets
                   </Label>
                   <div className="grid grid-cols-4 gap-2">
@@ -827,17 +825,17 @@ export default function CustomizeInvoice() {
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select pattern" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectItem value="diagonal-stripes">Diagonal Stripes</SelectItem>
-                        <SelectItem value="dots">Dots</SelectItem>
-                        <SelectItem value="grid">Grid</SelectItem>
-                        <SelectItem value="waves">Waves</SelectItem>
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="diagonal-stripes">Diagonal Stripes</SelectItem>
+                      <SelectItem value="dots">Dots</SelectItem>
+                      <SelectItem value="grid">Grid</SelectItem>
+                      <SelectItem value="waves">Waves</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
               )}
               
               <div>
@@ -951,127 +949,3 @@ export default function CustomizeInvoice() {
                 </Label>
                 <Switch
                   id="includeSignatureLine"
-                  checked={settings.includeSignatureLine}
-                  onCheckedChange={(checked) => handleSwitchChange('includeSignatureLine', checked)}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <Label htmlFor="includeAmountInWords">
-                  Include Amount In Words
-                </Label>
-                <Switch
-                  id="includeAmountInWords"
-                  checked={settings.includeAmountInWords}
-                  onCheckedChange={(checked) => handleSwitchChange('includeAmountInWords', checked)}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <Label htmlFor="includeTermsAndConditions">
-                  Include Terms & Conditions
-                </Label>
-                <Switch
-                  id="includeTermsAndConditions"
-                  checked={settings.includeTermsAndConditions}
-                  onCheckedChange={(checked) => handleSwitchChange('includeTermsAndConditions', checked)}
-                />
-              </div>
-              
-              {settings.includeTermsAndConditions && (
-                <div>
-                  <Label htmlFor="termsAndConditions">Terms & Conditions</Label>
-                  <Textarea
-                    id="termsAndConditions"
-                    name="termsAndConditions"
-                    value={settings.termsAndConditions}
-                    onChange={handleSettingChange}
-                    placeholder="1. All payments are due within 30 days of receipt."
-                    rows={3}
-                  />
-                </div>
-              )}
-              
-              <div className="flex items-center justify-between">
-                <Label htmlFor="includeNotes">
-                  Include Notes Section
-                </Label>
-                <Switch
-                  id="includeNotes"
-                  checked={settings.includeNotes}
-                  onCheckedChange={(checked) => handleSwitchChange('includeNotes', checked)}
-                />
-              </div>
-              
-              {settings.includeNotes && (
-                <div>
-                  <Label htmlFor="notes">Notes</Label>
-                  <Textarea
-                    id="notes"
-                    name="notes"
-                    value={settings.notes}
-                    onChange={handleSettingChange}
-                    placeholder="Thank you for your business!"
-                    rows={3}
-                  />
-                </div>
-              )}
-              
-              <div className="flex items-center justify-between">
-                <Label htmlFor="includeFooterText">
-                  Include Footer Text
-                </Label>
-                <Switch
-                  id="includeFooterText"
-                  checked={settings.includeFooterText}
-                  onCheckedChange={(checked) => handleSwitchChange('includeFooterText', checked)}
-                />
-              </div>
-              
-              {settings.includeFooterText && (
-                <div>
-                  <Label htmlFor="footerText">Footer Text</Label>
-                  <Textarea
-                    id="footerText"
-                    name="footerText"
-                    value={settings.footerText}
-                    onChange={handleSettingChange}
-                    placeholder="Thank you for your business!"
-                    rows={2}
-                  />
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </div>
-      </div>
-      
-      {/* Preview Section */}
-      <div className="bg-gray-50 h-full">
-        <div className="flex justify-between items-center p-4 border-b">
-          <h2 className="text-lg font-semibold">Template Preview</h2>
-        </div>
-        <div className="p-6 overflow-auto h-[calc(100vh-9rem)]">
-          <InvoicePreview invoice={previewInvoice} />
-        </div>
-      </div>
-
-      {/* Fixed bottom action bar */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t flex justify-end gap-4 z-10">
-        <Button
-          onClick={() => navigate('/')}
-          variant="outline"
-        >
-          Cancel
-        </Button>
-        <Button
-          onClick={handleSaveSettings}
-          className="bg-green-500 hover:bg-green-600 text-white"
-        >
-          <Save className="mr-2 h-4 w-4" />
-          Save Template
-        </Button>
-      </div>
-    </div>
-  );
-}

@@ -10,7 +10,7 @@ import Invoices from "./pages/Invoices";
 import Customers from "./pages/Customers";
 import { Layout } from "./components/Layout";
 import EditInvoice from "./pages/EditInvoice";
-import CustomizeInvoice from "./pages/CustomizeInvoice"; // Import the new page
+import CustomizeInvoice from "./pages/CustomizeInvoice";
 
 const queryClient = new QueryClient();
 
