@@ -4,6 +4,7 @@ export interface Customer {
   name: string;
   contact: string;
   avatar?: string;
+  address?: string; // Added address property
 }
 
 export interface LineItem {
@@ -14,12 +15,16 @@ export interface LineItem {
 }
 
 export interface InvoiceData {
+  id?: string; // Added id property
   billNo: string;
   date: Date;
   customer: Customer | null;
   vehicleNo: string;
   vehicleType: string;
   meterReading: string;
+  vehicleModel?: string; // Added vehicleModel property
+  vehicleNumber?: string; // Added vehicleNumber property
+  dueDate?: Date | string; // Added dueDate property
   lineItems: LineItem[];
   total: number;
   isDraft?: boolean;

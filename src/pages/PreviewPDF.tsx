@@ -20,7 +20,7 @@ const PreviewPDF = () => {
         const storedInvoices = localStorage.getItem('invoices');
         if (storedInvoices) {
           const invoices = JSON.parse(storedInvoices);
-          const foundInvoice = invoices.find((inv: InvoiceData) => inv.id === id);
+          const foundInvoice = invoices.find((inv: InvoiceData) => inv.billNo === id);
           if (foundInvoice) {
             setInvoice(foundInvoice);
           }
