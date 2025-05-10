@@ -2,7 +2,7 @@
 import { format } from "date-fns";
 import GarageLogo from "./GarageLogo";
 import { InvoiceData, formatCurrency } from "@/lib/invoice-types";
-import { FileText, Download, FileImage, File } from "lucide-react";
+import { FileText, FileImage, File } from "lucide-react";
 import { getPDFTemplateSettings, getBackgroundPatternUrl } from "@/lib/pdf-generator";
 import { InvoiceHeader } from "./InvoiceHeader";
 import { InvoicePreTableFields } from "./InvoicePreTableFields";
@@ -11,9 +11,10 @@ import { useEffect, useState } from "react";
 
 interface InvoicePreviewProps {
   invoice: InvoiceData;
+  hideAttachment?: boolean; // Added prop to hide attachment section
 }
 
-export function InvoicePreview({ invoice }: InvoicePreviewProps) {
+export function InvoicePreview({ invoice, hideAttachment = false }: InvoicePreviewProps) {
   const [settings, setSettings] = useState(getPDFTemplateSettings());
   const useCustomHeader = !!settings && localStorage.getItem('pdfTemplateSettings');
 
@@ -312,24 +313,23 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
       {/* Additional content (amount in words, notes, terms, etc.) */}
       <InvoiceAdditionalContent settings={settings} amount={calculateFinalAmount()} />
       
-      {/* Attachment */}
-      <div style={{ position: 'relative', zIndex: 2 }}>
-        <h3 className="text-sm font-medium mb-2">Attachment</h3>
-        <div className="flex items-center justify-between border rounded-lg p-3">
-          <div className="flex items-center">
-            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mr-3">
-              <FileText className="h-5 w-5 text-gray-500" />
-            </div>
-            <div>
-              <p className="text-sm font-medium">Product list.PDF</p>
-              <p className="text-xs text-gray-500">512kb</p>
+      {/* Attachment - Only show if hideAttachment is false */}
+      {!hideAttachment && (
+        <div style={{ position: 'relative', zIndex: 2 }}>
+          <h3 className="text-sm font-medium mb-2">Attachment</h3>
+          <div className="flex items-center justify-between border rounded-lg p-3">
+            <div className="flex items-center">
+              <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mr-3">
+                <FileText className="h-5 w-5 text-gray-500" />
+              </div>
+              <div>
+                <p className="text-sm font-medium">Product list.PDF</p>
+                <p className="text-xs text-gray-500">512kb</p>
+              </div>
             </div>
           </div>
-          <button className="text-green-500 flex items-center text-sm">
-            <Download className="h-4 w-4 mr-1" /> Download
-          </button>
         </div>
-      </div>
+      )}
     </div>
   );
 }

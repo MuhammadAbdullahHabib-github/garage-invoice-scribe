@@ -75,7 +75,7 @@ const PreviewPDF = () => {
       </div>
       
       <div className="bg-gray-100 p-8 rounded-lg">
-        <InvoicePreview invoice={invoice} />
+        <InvoicePreview invoice={invoice} hideAttachment={true} />
       </div>
     </div>
   );

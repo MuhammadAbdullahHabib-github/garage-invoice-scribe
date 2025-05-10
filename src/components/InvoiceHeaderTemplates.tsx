@@ -170,6 +170,16 @@ export const InvoiceHeaderTemplates: React.FC<InvoiceHeaderTemplatesProps> = ({
     }
   ];
 
+  // Handle template selection with real-time preview update
+  const handleTemplateSelect = (templateId: string) => {
+    // First, dispatch the selection to parent component
+    onSelectTemplate(templateId);
+    
+    // For real-time preview, we can also dispatch a custom event to notify components
+    const event = new CustomEvent('templateSelected', { detail: { templateId } });
+    window.dispatchEvent(event);
+  };
+
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -179,7 +189,7 @@ export const InvoiceHeaderTemplates: React.FC<InvoiceHeaderTemplatesProps> = ({
             className={`border rounded-lg overflow-hidden cursor-pointer hover:border-blue-500 transition-all ${
               currentTemplateId === template.id ? 'ring-2 ring-blue-500 border-blue-500' : ''
             }`}
-            onClick={() => onSelectTemplate(template.id)}
+            onClick={() => handleTemplateSelect(template.id)}
           >
             <div className="p-3 bg-gray-50 border-b">
               <h3 className="font-medium text-sm">{template.name}</h3>
