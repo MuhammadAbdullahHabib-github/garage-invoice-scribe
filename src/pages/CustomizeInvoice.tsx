@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
@@ -825,17 +826,17 @@ export default function CustomizeInvoice() {
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select pattern" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value="diagonal-stripes">Diagonal Stripes</SelectItem>
-                      <SelectItem value="dots">Dots</SelectItem>
-                      <SelectItem value="grid">Grid</SelectItem>
-                      <SelectItem value="waves">Waves</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectItem value="diagonal-stripes">Diagonal Stripes</SelectItem>
+                        <SelectItem value="dots">Dots</SelectItem>
+                        <SelectItem value="grid">Grid</SelectItem>
+                        <SelectItem value="waves">Waves</SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
               )}
               
               <div>
@@ -949,3 +950,117 @@ export default function CustomizeInvoice() {
                 </Label>
                 <Switch
                   id="includeSignatureLine"
+                  checked={settings.includeSignatureLine}
+                  onCheckedChange={(checked) => handleSwitchChange('includeSignatureLine', checked)}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <Label htmlFor="includeAmountInWords">
+                  Include Amount In Words
+                </Label>
+                <Switch
+                  id="includeAmountInWords"
+                  checked={settings.includeAmountInWords}
+                  onCheckedChange={(checked) => handleSwitchChange('includeAmountInWords', checked)}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <Label htmlFor="includeFooterText">
+                  Include Footer Text
+                </Label>
+                <Switch
+                  id="includeFooterText"
+                  checked={settings.includeFooterText}
+                  onCheckedChange={(checked) => handleSwitchChange('includeFooterText', checked)}
+                />
+              </div>
+              
+              {settings.includeFooterText && (
+                <div>
+                  <Label htmlFor="footerText">Footer Text</Label>
+                  <Input
+                    id="footerText"
+                    name="footerText"
+                    value={settings.footerText}
+                    onChange={handleSettingChange}
+                    placeholder="Thank you for your business"
+                  />
+                </div>
+              )}
+              
+              <div className="flex items-center justify-between">
+                <Label htmlFor="includeTermsAndConditions">
+                  Include Terms & Conditions
+                </Label>
+                <Switch
+                  id="includeTermsAndConditions"
+                  checked={settings.includeTermsAndConditions}
+                  onCheckedChange={(checked) => handleSwitchChange('includeTermsAndConditions', checked)}
+                />
+              </div>
+              
+              {settings.includeTermsAndConditions && (
+                <div>
+                  <Label htmlFor="termsAndConditions">Terms & Conditions</Label>
+                  <Textarea
+                    id="termsAndConditions"
+                    name="termsAndConditions"
+                    value={settings.termsAndConditions}
+                    onChange={handleSettingChange}
+                    rows={3}
+                    placeholder="Enter terms and conditions..."
+                  />
+                </div>
+              )}
+              
+              <div className="flex items-center justify-between">
+                <Label htmlFor="includeNotes">
+                  Include Notes
+                </Label>
+                <Switch
+                  id="includeNotes"
+                  checked={settings.includeNotes}
+                  onCheckedChange={(checked) => handleSwitchChange('includeNotes', checked)}
+                />
+              </div>
+              
+              {settings.includeNotes && (
+                <div>
+                  <Label htmlFor="notes">Notes</Label>
+                  <Textarea
+                    id="notes"
+                    name="notes"
+                    value={settings.notes}
+                    onChange={handleSettingChange}
+                    rows={3}
+                    placeholder="Enter notes..."
+                  />
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+          
+          <div className="flex justify-end pt-6 border-t mt-6">
+            <Button 
+              onClick={handleSaveSettings}
+              className="flex items-center gap-2"
+            >
+              <Save className="h-4 w-4" />
+              Save Template Settings
+            </Button>
+          </div>
+        </div>
+      </div>
+      
+      {/* Preview Section */}
+      <div className="bg-gray-50 overflow-auto h-[calc(100vh-9rem)]">
+        <div className="p-6">
+          <h2 className="text-lg font-semibold mb-6">Preview</h2>
+          <InvoicePreview invoice={previewInvoice} />
+        </div>
+      </div>
+    </div>
+  );
+}
